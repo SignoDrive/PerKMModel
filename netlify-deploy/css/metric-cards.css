@@ -1,0 +1,75 @@
+/* Metric Card Styling - Override all conflicts */
+.metric-card {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    margin: 20px 8px !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
+    position: relative !important;
+    overflow: visible !important;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+}
+
+.metric-card::before {
+    display: none !important;
+}
+
+/* Target specific column containers */
+.col-lg-3 .metric-card,
+.col-md-6 .metric-card,
+.col-md-3 .metric-card,
+div.metric-card {
+    background: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 20px !important;
+    padding: 28px !important;
+    margin: 20px 8px !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08) !important;
+}
+
+/* Metric card content styling */
+.metric-value {
+    font-size: 2.5rem !important;
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    margin-bottom: 8px !important;
+    background: transparent !important;
+}
+
+.metric-label {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: #6c757d !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    margin-bottom: 12px !important;
+}
+
+.metric-trend {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    font-size: 0.8rem !important;
+}
+
+.trend-up {
+    color: #28a745 !important;
+}
+
+.trend-down {
+    color: #dc3545 !important;
+}
+
+.trend-neutral {
+    color: #6c757d !important;
+}
+
+.trend-warning {
+    color: #ffc107 !important;
+}
