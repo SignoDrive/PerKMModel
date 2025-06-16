@@ -1,0 +1,89 @@
+/* Metric Card Background Override - Primary Gradient */
+:root {
+  --primary-gradient: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  --dashboard-bg: #f8f9fa;
+}
+
+/* Complete metric card override with primary gradient */
+.metric-card,
+div.metric-card,
+.col-lg-3 .metric-card,
+.col-md-6 .metric-card,
+.col-md-3 .metric-card,
+.row .metric-card,
+.container-fluid .metric-card,
+body .metric-card,
+html body .metric-card {
+  background: var(--primary-gradient) !important;
+  background-color: var(--primary-gradient) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  border-radius: 20px !important;
+  padding: 28px !important;
+  margin: 20px 8px !important;
+  box-shadow: 0 8px 25px rgba(255, 215, 0, 0.15) !important;
+  transition: all 0.3s ease !important;
+  color: #1a1a1a !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.metric-card:hover,
+div.metric-card:hover,
+.col-lg-3 .metric-card:hover,
+.col-md-6 .metric-card:hover,
+.col-md-3 .metric-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 35px rgba(255, 215, 0, 0.25) !important;
+}
+
+/* Metric card content styling for gold gradient background */
+.metric-card .metric-value,
+.metric-card .metric-label,
+.metric-card .metric-trend {
+  color: #1a1a1a !important;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.3) !important;
+}
+
+.metric-card .metric-value {
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 8px !important;
+}
+
+.metric-card .metric-label {
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 12px !important;
+  opacity: 0.9 !important;
+}
+
+.metric-card .metric-trend {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+.metric-card .trend-up,
+.metric-card .trend-down,
+.metric-card .trend-neutral,
+.metric-card .trend-warning {
+  color: #1a1a1a !important;
+}
+
+/* Remove any card class conflicts */
+.metric-card.card,
+.card.metric-card {
+  background: var(--primary-gradient) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  border-radius: 20px !important;
+}
+
+/* Ensure icons are dark on gold gradient */
+.metric-card i,
+.metric-card .fas,
+.metric-card .trend-icon {
+  color: #1a1a1a !important;
+}

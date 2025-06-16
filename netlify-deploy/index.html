@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="QxzY65jZUGKxqCNIeVvz5CfqERbQVWbn9rG7zIYcpO66ylowQ2c7f0a2ORWxfSDV" />
+    <title>Login - DriveNowKM</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/css/styles.css?v=3"
+    />
+    <link
+      rel="stylesheet"
+      href="/static/css/metric-override.css?v=2"
+    />
+  </head>
+  <body>
+    
+    <!-- Login Navigation for Non-Authenticated Users -->
+    <nav class="navbar navbar-expand-lg simple-nav">
+      <div class="container-fluid">
+        <a class="navbar-brand simple-brand" href="/login/">
+          <i class="fas fa-truck simple-brand-icon"></i>
+          <span class="simple-brand-text">DriveNowKM Fleet</span>
+        </a>
+        <a href="/login/" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+        </a>
+      </div>
+    </nav>
+    
+
+    <main class="simple-main-content">
+       
+<div class="login-container" id="login-section">
+    <div class="login-card">
+        <div class="brand-logo">
+            <h1><i class="fas fa-truck text-primary"></i> DriveNowKM</h1>
+            <p>Smart Fleet Management System</p>
+        </div>
+
+        <div id="login-form" style="display: block;">
+
+
+
+
+            <!-- <button type="button" class="btn btn-google" onclick="handleGoogleLogin()">
+                <i class="fab fa-google me-2"></i>Continue with Google
+            </button> -->
+
+            <!-- <div class="divider">
+                <span>or</span>
+            </div> -->
+
+            <form onsubmit = "handleEmailLogin(event)">
+                <div class="mb-3">
+                    
+                    <input type="email" class="form-control" id="email" placeholder="Email address" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+            </form>
+
+            <div class="auth-toggle">
+                <a href="#" onclick="showRegisterForm()">Don't have an account? Sign up</a>
+            </div>
+            
+            <!-- Test Credentials Display -->
+            
+        </div>
+
+        <div id="register-form" style="display: none;">
+            <form onsubmit="handleEmailRegister(event)">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="register-first-name" placeholder="First Name" required>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="register-last-name" placeholder="Last Name" required>
+                </div>
+                <div class="mb-3">
+                    <input type="email" class="form-control" id="register-email" placeholder="Email address" required>
+                </div>
+                <div class="mb-3">
+                    <select class="form-control" id="register-role" required>
+                        <!-- <option value="">Select Your Role</option> -->
+                        <option value="fleet_owner">Fleet Owner</option>
+                        <!-- <option value="driver">Driver</option>
+                        <option value="supervisor">Supervisor</option> -->
+                    </select>
+                </div>
+                <div class="mb-3" id="company-name-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-company-name" placeholder="Company Name (Optional)">
+                </div>
+                <div class="mb-3" id="license-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-license" placeholder="License Number">
+                </div>
+                <div class="mb-3" id="vehicle-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-vehicle" placeholder="Vehicle Number">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="register-password" placeholder="Password (min 6 characters)" required minlength="6">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="confirm-password" placeholder="Confirm password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+            </form>
+
+            <div class="auth-toggle">
+                <a href="#" onclick="showLoginForm()">Already have an account? Sign in</a>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loading-spinner">
+            <!-- <div class="spinner-border text-primary" role="status"> -->
+                 <!-- <span class="visually-hidden">Loading...</span> -->
+            <!-- </div> -->
+            <!-- <p class="mt-2">Signing you in...</p> -->
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-section" style="display: none;">
+    <!-- Dashboard content will be loaded here -->
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome to DriveNowKM Dashboard</h2>
+            <div id="user-info"></div>
+        </div>
+        <div class="text-center">
+            <p>Loading your dashboard...</p>
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8MDJp71-_9kPqYtAhni8UmGQDnUzIlYA",
+  authDomain: "signo-fleet.firebaseapp.com",
+  projectId: "signo-fleet",
+  storageBucket: "signo-fleet.firebasestorage.app",
+  messagingSenderId: "958560675158",
+  appId: "1:958560675158:web:2704882b13d282c57362f7",
+  measurementId: "G-RQ5YWWZL4M"
+
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Google Sign-In Function
+window.handleGoogleLogin = async () => {
+    console.log("Google login triggered");
+    showLoading();
+    
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
+        
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        
+        // Send user data to Django backend for synchronization
+        await syncUserWithBackend(user, 'fleet_owner'); // Default role for Google sign-in
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Google Sign-In Error:', error);
+        
+        let errorMessage = 'Failed to sign in with Google. Please try again.';
+        if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'Sign-in cancelled. Please try again.';
+        } else if (error.code === 'auth/popup-blocked') {
+            errorMessage = 'Popup blocked. Please allow popups and try again.';
+        }
+        
+        alert(errorMessage);
+    }
+};
+
+// Email and Password Login
+window.handleEmailLogin = async (event) => {
+    console.log("hello")
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Sync with backend
+        await syncUserWithBackend(user);
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Email Sign-In Error:', error);
+        
+        let errorMessage = 'Failed to sign in. Please check your credentials.';
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = 'No account found with this email address.';
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = 'Incorrect password. Please try again.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Please enter a valid email address.';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = 'Too many failed attempts. Please try again later.';
+        }
+        
+        alert(errorMessage);
+    }
+};
+
+// Email Registration with Role
+window.registerWithEmailAndRole = async (email, password, userData) => {
+    try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Update user profile
+        await user.updateProfile({
+            displayName: `${userData.firstName} ${userData.lastName}`
+        });
+        
+        // Sync with Django backend including role and additional data
+        await syncUserWithBackend(user, userData.role, userData);
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        throw error; // Re-throw to be handled by the calling function
+    }
+};
+
+// Sync Firebase user with Django backend
+async function syncUserWithBackend(firebaseUser, role = null, additionalData = {}) {
+    try {
+        const idToken = await firebaseUser.getIdToken();
+        
+        const response = await fetch('/api/auth/firebase-login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                id_token: idToken,
+                role: role,
+                additional_data: additionalData
+            })
+        });
+        console.log(response)
+        if (!response.ok) {
+            throw new Error('Failed to sync with backend');
+        }
+        
+        const data = await response.json();
+        return data;
+        
+    } catch (error) {
+        console.error('Backend sync error:', error);
+        throw error;
+    }
+}
+
+// Helper functions
+function showLoading() {
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+function getCsrfToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfToken ? csrfToken.value : '';
+}
+
+// Authentication form toggles
+function showRegisterForm() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'block';
+}
+
+function showLoginForm() {
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+function showLoading() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loading-spinner').style.display = 'none';
+}
+
+// Handle role selection change
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('register-role');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            const role = this.value;
+            const companyField = document.getElementById('company-name-field');
+            const licenseField = document.getElementById('license-field');
+            const vehicleField = document.getElementById('vehicle-field');
+            
+            // Hide all role-specific fields first
+            companyField.style.display = 'none';
+            licenseField.style.display = 'none';
+            vehicleField.style.display = 'none';
+            
+            // Show relevant fields based on role
+            if (role === 'fleet_owner') {
+                companyField.style.display = 'block';
+            } else if (role === 'driver') {
+                licenseField.style.display = 'block';
+                vehicleField.style.display = 'block';
+            }
+        });
+    }
+});
+
+// Enhanced email registration with role-based validation
+window.handleEmailRegister = async (event) => {
+    event.preventDefault();
+    
+    const firstName = document.getElementById('register-first-name').value;
+    const lastName = document.getElementById('register-last-name').value;
+    const email = document.getElementById('register-email').value;
+    const role = document.getElementById('register-role').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    // Get role-specific data
+    const companyName = document.getElementById('register-company-name').value;
+    const licenseNumber = document.getElementById('register-license').value;
+    const vehicleNumber = document.getElementById('register-vehicle').value;
+    
+    // Validation
+    if (!firstName || !lastName || !email || !role) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+    }
+    
+    // Role-specific validation
+    if (role === 'driver' && !licenseNumber) {
+        alert('License number is required for drivers');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        // Prepare user data for backend
+        const userData = {
+            firstName,
+            lastName,
+            email,
+            role,
+            companyName: role === 'fleet_owner' ? companyName : null,
+            licenseNumber: role === 'driver' ? licenseNumber : null,
+            vehicleNumber: role === 'driver' ? vehicleNumber : null
+        };
+        
+        await registerWithEmailAndRole(email, password, userData);
+    } catch (error) {
+        hideLoading();
+        console.error('Registration error:', error);
+        
+        let errorMessage = 'Failed to create account. Please try again.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'An account with this email already exists.';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'Password is too weak. Please choose a stronger password.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Please enter a valid email address.';
+        }
+        
+        alert(errorMessage);
+    }
+    
+};
+
+// function showLoading() {
+//     document.getElementById('login-form').style.display = 'none';
+//     document.getElementById('register-form').style.display = 'none';
+//     document.getElementById('loading-spinner').style.display = 'block';
+// }
+
+// function hideLoading() {
+//     document.getElementById('loading-spinner').style.display = 'none';
+//     showLoginForm();
+// }
+
+// Redirect to dashboard after successful authentication
+function redirectToDashboard() {
+    window.location.href = '/fleet/dashboard/';
+}
+
+// Override the showAuthenticatedContent function for this page
+window.showAuthenticatedContent = function() {
+    // Redirect to dashboard instead of showing content here
+    redirectToDashboard();
+};
+</script>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Live Clock Function
+      function updateTime() {
+        const now = new Date();
+        const options = {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        };
+        const timeString = now.toLocaleDateString("en-US", options);
+        const timeElement = document.getElementById("current-time");
+        if (timeElement) {
+          timeElement.textContent = timeString;
+        }
+      }
+
+      // Update time immediately and then every second
+      updateTime();
+      setInterval(updateTime, 1000);
+
+      // Notification System
+      let notificationPolling;
+
+      function loadNotifications() {
+        fetch("/api/notifications/")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Authentication required");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            const notificationList =
+              document.getElementById("notification-list");
+            const notificationCount =
+              document.getElementById("notification-count");
+
+            if (data.notifications && data.notifications.length > 0) {
+              // Update count badge
+              const unreadCount = data.notifications.filter(
+                (n) => !n.is_read
+              ).length;
+              if (unreadCount > 0) {
+                notificationCount.textContent = unreadCount;
+                notificationCount.style.display = "block";
+              } else {
+                notificationCount.style.display = "none";
+              }
+
+              // Update notification list
+              notificationList.innerHTML = "";
+              data.notifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement("div");
+                notificationItem.className = `simple-notification-item ${
+                  !notification.is_read ? "unread" : ""
+                }`;
+                notificationItem.innerHTML = `
+                                <div class="simple-notification-content">
+                                    <h6 class="simple-notification-title">${
+                                      notification.title
+                                    }</h6>
+                                    <p class="simple-notification-message">${
+                                      notification.message
+                                    }</p>
+                                    <small class="simple-notification-time">${new Date(
+                                      notification.created_at
+                                    ).toLocaleString()}</small>
+                                </div>
+                            `;
+                notificationList.appendChild(notificationItem);
+              });
+            } else {
+              notificationList.innerHTML =
+                '<div class="text-center p-3 text-muted">No new alerts</div>';
+              notificationCount.style.display = "none";
+            }
+          })
+          .catch((error) => {
+            console.log("Notifications will be available once authenticated");
+          });
+      }
+
+      function markAllNotificationsRead() {
+        fetch("/api/notifications/mark-all-read/", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken":
+              document.querySelector("[name=csrfmiddlewaretoken]")?.value || "",
+            "Content-Type": "application/json",
+          },
+        }).then(() => {
+          loadNotifications();
+        });
+      }
+
+      // Load notifications on page load only (no automatic polling)
+      document.addEventListener("DOMContentLoaded", function () {
+        loadNotifications();
+        // Automatic polling disabled to prevent tab content interference
+      });
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+          for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + "=")) {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      window.csrfToken =
+        document.querySelector("meta[name='csrf-token']")?.content ||
+        getCookie("csrftoken");
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const passwordForm = document.querySelector(
+          "#password-form-container form"
+        );
+        if (passwordForm) {
+          passwordForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(passwordForm);
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+
+            fetch("/change-password/", {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest",
+              },
+              body: formData,
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                const msg = document.getElementById("password-change-message");
+                if (data.success) {
+                  msg.innerText = "Password changed successfully.";
+                  msg.classList.remove("text-danger");
+                  msg.classList.add("text-success");
+                  msg.style.display = "block";
+                  passwordForm.reset();
+                } else if (data.errors) {
+                  msg.innerText =
+                    "Error: " + Object.values(data.errors).join(", ");
+                  msg.classList.remove("text-success");
+                  msg.classList.add("text-danger");
+                  msg.style.display = "block";
+                }
+              })
+              .catch((error) => console.error("Password change failed", error));
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
