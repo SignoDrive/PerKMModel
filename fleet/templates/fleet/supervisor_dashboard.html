@@ -1,0 +1,951 @@
+{% extends 'fleet/base.html' %}
+
+{% block title %}Supervisor Dashboard - DriveNowKM Flex{% endblock %}
+
+{% block content %}
+<!-- Professional Dashboard Header -->
+<div class="dashboard-header bg-white shadow-sm border-bottom mb-4">
+  <div class="container-fluid py-3">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1 class="h3 mb-1 text-dark fw-bold">
+          <i class="fas fa-clipboard-check me-2"></i>Supervisor Dashboard
+        </h1>
+        <p class="text-muted mb-0">
+          Manage fleet operations, approve payments, and monitor driver performance
+        </p>
+      </div>
+      <div class="col-auto">
+        <div class="d-flex align-items-center gap-3">
+          <div class="text-end">
+            <div class="small text-muted">{{ "now"|date:"F j, Y" }}</div>
+            <div class="small text-muted">{{ "now"|date:"g:i A" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modern Key Metrics -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ pending_requests.count|default:0 }}
+      </div>
+      <div class="metric-label">Pending Approvals</div>
+      <div class="metric-trend">
+        <i class="fas fa-clock trend-warning"></i>
+        <span class="trend-warning">Awaiting review</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ all_drivers.count|default:0 }}
+      </div>
+      <div class="metric-label">Active Drivers</div>
+      <div class="metric-trend">
+        <i class="fas fa-users trend-up"></i>
+        <span class="trend-up">Fleet team</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ in_progress_trips_count|default:0 }}
+      </div>
+      <div class="metric-label">Active Trips</div>
+      <div class="metric-trend">
+        <i class="fas fa-route trend-up"></i>
+        <span class="trend-up">In progress</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ fleet_utilization|default:0 }}%
+      </div>
+      <div class="metric-label">Fleet Utilization</div>
+      <div class="metric-trend">
+        <i class="fas fa-chart-pie trend-up"></i>
+        <span class="trend-up">Performance</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Dashboard Tabs -->
+<div class="card">
+    <div class="card-header p-0">
+        <ul class="nav nav-tabs nav-tabs-modern" id="supervisorTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                    <i class="fas fa-tachometer-alt"></i> Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="drivers-tab" data-bs-toggle="tab" data-bs-target="#drivers" type="button" role="tab">
+                    <i class="fas fa-users"></i> Driver Management
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trips-tab" data-bs-toggle="tab" data-bs-target="#trips" type="button" role="tab">
+                    <i class="fas fa-route"></i> Trip Monitoring
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="approvals-tab" data-bs-toggle="tab" data-bs-target="#approvals" type="button" role="tab">
+                    <i class="fas fa-check-circle"></i> Request Approvals
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="map-tab" data-bs-toggle="tab" data-bs-target="#map" type="button" role="tab">
+                    <i class="fas fa-map-marked-alt"></i> Driver Locations
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="card-body">
+        <div class="tab-content" id="supervisorTabsContent">
+            
+            <!-- Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <h6><i class="fas fa-chart-line"></i> Fleet Performance Overview</h6>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Performance Metrics</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="metric-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total Earnings</span>
+                                        <strong class="text-success">₹{{ total_earnings|floatformat:0 }}</strong>
+                                    </div>
+                                </div>
+                                <div class="metric-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Average Trip Cost</span>
+                                        <span>₹{{ avg_trip_cost|floatformat:0 }}</span>
+                                    </div>
+                                </div>
+                                <div class="metric-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Completed Trips</span>
+                                        <span class="badge bg-success">{{ completed_trips_count }}</span>
+                                    </div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Pending Trips</span>
+                                        <span class="badge bg-warning">{{ pending_trips_count }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-activity"></i> Recent Activity</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="activity-feed" style="max-height: 300px; overflow-y: auto;">
+                                    {% for activity in recent_activities %}
+                                    <div class="activity-item mb-2 p-2 border-bottom">
+                                        <div class="d-flex justify-content-between">
+                                            <div>
+                                                <small class="text-muted">{{ activity.driver }}</small>
+                                                <p class="mb-1">{{ activity.description }}</p>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-{% if activity.status == 'completed' %}success{% elif activity.status == 'pending' %}warning{% else %}info{% endif %}">
+                                                    {{ activity.status }}
+                                                </span>
+                                                <small class="d-block text-muted">₹{{ activity.amount|floatformat:0 }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Driver Management Tab -->
+            <div class="tab-pane fade" id="drivers" role="tabpanel">
+                <h6><i class="fas fa-users"></i> Driver Management & Performance</h6>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Driver</th>
+                                <th>Contact</th>
+                                <th>Total Trips</th>
+                                <th>Completed</th>
+                                <th>Earnings</th>
+                                <th>Pending Requests</th>
+                                <th>Efficiency</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for perf in driver_performance %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
+                                        <div>
+                                            <strong>{{ perf.driver.user.get_full_name }}</strong>
+                                            <small class="d-block text-muted">{{ perf.driver.license_number|default:"No License" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <small>{{ perf.driver.user.email|default:"No Email" }}</small>
+                                        <small class="d-block">{{ perf.driver.user.phone|default:"No Phone" }}</small>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">{{ perf.total_trips }}</span></td>
+                                <td><span class="badge bg-success">{{ perf.completed_trips }}</span></td>
+                                <td><strong class="text-success">₹{{ perf.earnings|floatformat:0 }}</strong></td>
+                                <td>
+                                    {% if perf.pending_requests > 0 %}
+                                        <span class="badge bg-warning">{{ perf.pending_requests }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-{% if perf.efficiency_score >= 80 %}success{% elif perf.efficiency_score >= 60 %}warning{% else %}danger{% endif %}" 
+                                             style="width: {{ perf.efficiency_score }}%">
+                                            {{ perf.efficiency_score }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDriverLocation({{ perf.driver.id }})">
+                                        <i class="fas fa-map-marker-alt"></i> Location
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Trip Monitoring Tab -->
+            <div class="tab-pane fade" id="trips" role="tabpanel">
+                <h6><i class="fas fa-route"></i> Trip Monitoring</h6>
+                
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <select class="form-select" id="tripStatusFilter">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" id="tripSearchFilter" placeholder="Search by origin, destination, or driver name...">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-striped" id="tripsTable">
+                        <thead>
+                            <tr>
+                                <th>Trip ID</th>
+                                <th>Route</th>
+                                <th>Driver</th>
+                                <th>Vehicle</th>
+                                <th>Distance</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for trip in all_trips %}
+                            <tr data-status="{{ trip.status }}">
+                                <td><strong>#{{ trip.id }}</strong></td>
+                                <td>
+                                    <div>
+                                        <strong>{{ trip.origin }}</strong>
+                                        <i class="fas fa-arrow-right mx-1"></i>
+                                        <strong>{{ trip.destination }}</strong>
+                                        <small class="d-block text-muted">{{ trip.distance }} km</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if trip.driver %}
+                                        {{ trip.driver.user.get_full_name }}
+                                    {% else %}
+                                        <span class="text-muted">Unassigned</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if trip.vehicle %}
+                                        {{ trip.vehicle.vehicle_number }}
+                                    {% else %}
+                                        <span class="text-muted">No Vehicle</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ trip.distance }} km</td>
+                                <td>
+                                    <div>
+                                        <strong>₹{{ trip.actual_cost|default:trip.estimated_cost|floatformat:0 }}</strong>
+                                        {% if trip.actual_cost %}
+                                            <small class="d-block text-muted">Actual</small>
+                                        {% else %}
+                                            <small class="d-block text-muted">Estimated</small>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if trip.status == 'completed' %}success{% elif trip.status == 'in_progress' %}warning{% elif trip.status == 'pending' %}info{% else %}secondary{% endif %}">
+                                        {{ trip.status|title }}
+                                    </span>
+                                </td>
+                                <td>{{ trip.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewTripDetails({{ trip.id }})">
+                                        <i class="fas fa-eye"></i> View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Request Approvals Tab -->
+            <div class="tab-pane fade" id="approvals" role="tabpanel">
+                <h6><i class="fas fa-check-circle"></i> Payment Request Approvals</h6>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-warning text-white">
+                                <h6 class="mb-0"><i class="fas fa-clock"></i> Pending Approvals ({{ pending_requests.count }})</h6>
+                            </div>
+                            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                                {% for request in pending_requests %}
+                                <div class="request-item mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">{{ request.driver.user.get_full_name }}</h6>
+                                            <p class="mb-1"><strong>{{ request.type|title }}</strong> - ₹{{ request.amount }}</p>
+                                            <p class="text-muted mb-2">{{ request.description|truncatewords:15 }}</p>
+                                            <small class="text-muted">{{ request.requested_at|date:"M d, Y H:i" }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <button class="btn btn-success btn-sm me-1" onclick="approveRequest({{ request.id }})">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" onclick="rejectRequest({{ request.id }})">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <p class="text-muted text-center">No pending requests</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-success text-white">
+                                <h6 class="mb-0"><i class="fas fa-check"></i> Recently Processed</h6>
+                            </div>
+                            <div class="card-body" style="max-height: 500px; overflow-y: auto;">
+                                {% for request in approved_requests %}
+                                <div class="request-item mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ request.driver.user.get_full_name }}</h6>
+                                            <p class="mb-1">{{ request.type|title }} - ₹{{ request.amount }}</p>
+                                            <small class="text-muted">Reviewed: {{ request.reviewed_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <span class="badge bg-success">Approved</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% for request in rejected_requests %}
+                                <div class="request-item mb-3 p-3 border rounded">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <h6 class="mb-1">{{ request.driver.user.get_full_name }}</h6>
+                                            <p class="mb-1">{{ request.type|title }} - ₹{{ request.amount }}</p>
+                                            <small class="text-muted">Reviewed: {{ request.reviewed_at|date:"M d, Y" }}</small>
+                                        </div>
+                                        <span class="badge bg-danger">Rejected</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Driver Locations Map Tab -->
+            <div class="tab-pane fade" id="map" role="tabpanel">
+                <h6><i class="fas fa-map-marked-alt"></i> Real-time Driver Locations</h6>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-users"></i> Active Drivers</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="driversList">
+                                    {% for driver in all_drivers %}
+                                    <div class="driver-location-item p-2 border-bottom" data-driver-id="{{ driver.id }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ driver.user.get_full_name }}</strong>
+                                                <small class="d-block text-muted">{{ driver.vehicle_number|default:"No Vehicle" }}</small>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary" onclick="trackDriver({{ driver.id }})">
+                                                <i class="fas fa-crosshairs"></i> Track
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-map"></i> Live Map</h6>
+                            </div>
+                            <div class="card-body">
+                                <div id="driverMap" style="height: 500px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                        <div class="text-center">
+                                            <i class="fas fa-map-marked-alt fa-3x text-muted mb-3"></i>
+                                            <h6>Driver Location Map</h6>
+                                            <p class="text-muted">Select a driver to view their real-time location</p>
+                                            <button class="btn btn-primary" onclick="loadOlaMap()">
+                                                <i class="fas fa-map"></i> Load Ola Maps
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Approval Modal -->
+<div class="modal fade" id="requestApprovalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Request Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="requestDetails"></div>
+                <div class="mt-3">
+                    <label for="approvalComments" class="form-label">Comments</label>
+                    <textarea class="form-control" id="approvalComments" rows="3" placeholder="Add your comments..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="confirmApprove">
+                    <i class="fas fa-check"></i> Approve & Forward to Admin
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmReject">
+                    <i class="fas fa-times"></i> Reject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Supervisor Dashboard JavaScript Functions
+
+let currentRequestId = null;
+
+// Request approval functions
+function approveRequest(requestId) {
+    currentRequestId = requestId;
+    document.getElementById('requestDetails').innerHTML = `
+        <p><strong>Action:</strong> Approve and forward to admin for final approval</p>
+        <p class="text-info">This request will be marked as supervisor-approved and sent to admin for final processing.</p>
+    `;
+    document.getElementById('confirmApprove').style.display = 'block';
+    document.getElementById('confirmReject').style.display = 'none';
+    new bootstrap.Modal(document.getElementById('requestApprovalModal')).show();
+}
+
+function rejectRequest(requestId) {
+    currentRequestId = requestId;
+    document.getElementById('requestDetails').innerHTML = `
+        <p><strong>Action:</strong> Reject request</p>
+        <p class="text-danger">This request will be permanently rejected.</p>
+    `;
+    document.getElementById('confirmApprove').style.display = 'none';
+    document.getElementById('confirmReject').style.display = 'block';
+    new bootstrap.Modal(document.getElementById('requestApprovalModal')).show();
+}
+
+document.getElementById('confirmApprove').addEventListener('click', function() {
+    submitApproval('approve');
+});
+
+document.getElementById('confirmReject').addEventListener('click', function() {
+    submitApproval('reject');
+});
+
+function submitApproval(action) {
+    const comments = document.getElementById('approvalComments').value;
+    
+    fetch(`/supervisor-approve-request/${currentRequestId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            action: action,
+            comments: comments
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, 'success');
+            location.reload(); // Refresh to show updated status
+        } else {
+            showAlert(data.error || 'An error occurred', 'danger');
+        }
+        bootstrap.Modal.getInstance(document.getElementById('requestApprovalModal')).hide();
+    })
+    .catch(error => {
+        showAlert('Network error occurred', 'danger');
+        bootstrap.Modal.getInstance(document.getElementById('requestApprovalModal')).hide();
+    });
+}
+
+// Driver location tracking
+function viewDriverLocation(driverId) {
+    trackDriver(driverId);
+    // Switch to map tab
+    document.getElementById('map-tab').click();
+}
+
+function trackDriver(driverId) {
+    fetch(`/get-driver-location/${driverId}/`)
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showDriverOnMap(data.location, data.driver_name);
+            showAlert(`Tracking ${data.driver_name}`, 'info');
+        } else {
+            showAlert(data.message || 'Unable to get driver location', 'warning');
+        }
+    })
+    .catch(error => {
+        showAlert('Error fetching driver location', 'danger');
+    });
+}
+
+function loadOlaMap() {
+    // Initialize Ola Maps
+    document.getElementById('driverMap').innerHTML = `
+        <div id="olaMap" style="width: 100%; height: 500px;"></div>
+        <div class="mt-2">
+            <button class="btn btn-sm btn-primary me-2" onclick="showAllDriversOla()">
+                <i class="fas fa-users"></i> Show All Drivers
+            </button>
+            <button class="btn btn-sm btn-info me-2" onclick="refreshOlaLocations()">
+                <i class="fas fa-sync"></i> Refresh Locations
+            </button>
+            <span class="badge bg-success ms-2" id="olaMapStatus">Ola Maps Ready</span>
+        </div>
+    `;
+    
+    // Initialize Ola Maps
+    try {
+        // Load Mapbox GL JS (which Ola Maps is based on)
+        if (typeof mapboxgl === 'undefined') {
+            // Load Mapbox GL JS CSS
+            const link = document.createElement('link');
+            link.href = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css';
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+            
+            // Load Mapbox GL JS script
+            const script = document.createElement('script');
+            script.src = 'https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js';
+            script.onload = function() {
+                initializeOlaMap();
+            };
+            script.onerror = function() {
+                console.log('Ola Maps SDK failed to load, falling back to static view');
+                showStaticFallback();
+            };
+            document.head.appendChild(script);
+        } else {
+            initializeOlaMap();
+        }
+        
+    } catch (error) {
+        console.log('Ola Maps initialization error:', error);
+        showStaticLocations();
+    }
+}
+
+function initializeOlaMap() {
+    // Show loading state
+    document.getElementById('olaMapStatus').textContent = 'Loading Ola Maps...';
+    document.getElementById('olaMapStatus').className = 'badge bg-info ms-2';
+    
+    // Create a working map interface with visible buttons
+    document.getElementById('olaMap').innerHTML = `
+        <div style="width: 100%; height: 460px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                    border-radius: 8px; position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') center/cover;">
+            </div>
+            <div style="position: absolute; top: 20px; left: 20px; background: white; 
+                        padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                <h6 style="margin: 0 0 10px 0; color: #333;">
+                    <i class="fas fa-map-marked-alt text-primary"></i> Ola Maps - Driver Tracking
+                </h6>
+                <div id="driverLocationsList" style="max-height: 200px; overflow-y: auto;"></div>
+            </div>
+            <div style="position: absolute; bottom: 20px; right: 20px;">
+                <div style="background: white; padding: 10px; border-radius: 8px; 
+                           box-shadow: 0 4px 12px rgba(0,0,0,0.15); text-align: center;">
+                    <small style="color: #666; display: block; margin-bottom: 8px;">Map Controls</small>
+                    <button class="btn btn-sm btn-primary me-1" onclick="showAllDriversOla()" 
+                            style="font-size: 11px; padding: 4px 8px;">
+                        <i class="fas fa-users"></i> All
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="refreshOlaLocations()" 
+                            style="font-size: 11px; padding: 4px 8px;">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Initialize driver display
+    showAllDriversOla();
+    
+    // Update status
+    document.getElementById('olaMapStatus').textContent = 'Ola Maps Ready';
+    document.getElementById('olaMapStatus').className = 'badge bg-success ms-2';
+}
+
+function showStaticFallback() {
+    document.getElementById('driverMap').innerHTML = `
+        <div class="alert alert-info">
+            <h6><i class="fas fa-map"></i> Static Map View</h6>
+            <p>Interactive map requires API configuration. Showing location coordinates:</p>
+            <div id="staticLocationsList" class="mt-3"></div>
+        </div>
+    `;
+    showStaticLocations();
+}
+
+function showDriverOnMap(location, driverName) {
+    if (location && location.latitude && location.longitude) {
+        document.getElementById('driverMap').innerHTML = `
+            <div class="d-flex align-items-center justify-content-center h-100">
+                <div class="text-center">
+                    <i class="fas fa-map-marker-alt fa-3x text-success mb-3"></i>
+                    <h6>${driverName} Location</h6>
+                    <p>Latitude: ${location.latitude}</p>
+                    <p>Longitude: ${location.longitude}</p>
+                    <p class="text-muted small">Last updated: ${new Date(location.timestamp).toLocaleString()}</p>
+                    <button class="btn btn-primary" onclick="openInGoogleMaps(${location.latitude}, ${location.longitude})">
+                        <i class="fas fa-external-link-alt"></i> Open in Google Maps
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function openInGoogleMaps(lat, lng) {
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+}
+
+// Static map functions for when interactive map is not available
+function showStaticLocations() {
+    const staticList = document.getElementById('staticLocationsList');
+    if (!staticList) return;
+    
+    // Fetch all driver locations
+    {% for driver in all_drivers %}
+    {% if driver.current_location %}
+    const driver{{ driver.id }}Location = {{ driver.current_location|safe }};
+    addStaticLocationItem(staticList, '{{ driver.user.get_full_name }}', driver{{ driver.id }}Location, {{ driver.id }});
+    {% endif %}
+    {% endfor %}
+    
+    if (staticList.children.length === 0) {
+        staticList.innerHTML = '<p class="text-muted">No driver locations available</p>';
+    }
+}
+
+function addStaticLocationItem(container, driverName, location, driverId) {
+    const locationItem = document.createElement('div');
+    locationItem.className = 'border rounded p-3 mb-2 bg-light';
+    locationItem.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1">${driverName}</h6>
+                <small class="text-muted">
+                    Lat: ${location.latitude}, Lng: ${location.longitude}
+                </small>
+                <br>
+                <small class="text-muted">
+                    Updated: ${new Date(location.timestamp).toLocaleString()}
+                </small>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-1" onclick="openInGoogleMaps(${location.latitude}, ${location.longitude})">
+                    <i class="fas fa-external-link-alt"></i> View
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="generateStaticMapImage(${location.latitude}, ${location.longitude}, '${driverName}')">
+                    <i class="fas fa-map"></i> Map
+                </button>
+            </div>
+        </div>
+    `;
+    container.appendChild(locationItem);
+}
+
+// Ola Maps functions for driver display
+function showAllDriversOla() {
+    const driversList = document.getElementById('driverLocationsList');
+    if (!driversList) return;
+    
+    // Clear existing content
+    driversList.innerHTML = '';
+    
+    let driversWithLocation = 0;
+    
+    // Add driver location cards
+    {% for driver in all_drivers %}
+    {% if driver.current_location %}
+    driversWithLocation++;
+    
+    const driverCard{{ driver.id }} = document.createElement('div');
+    driverCard{{ driver.id }}.className = 'driver-location-card';
+    driverCard{{ driver.id }}.style.cssText = `
+        background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; 
+        padding: 10px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;
+    `;
+    
+    driverCard{{ driver.id }}.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: between;">
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #495057; font-size: 13px;">
+                    <i class="fas fa-user-circle text-primary"></i> {{ driver.user.get_full_name }}
+                </div>
+                <div style="font-size: 11px; color: #6c757d; margin-top: 2px;">
+                    📍 {{ driver.current_location.latitude|floatformat:4 }}, {{ driver.current_location.longitude|floatformat:4 }}
+                </div>
+                <div style="font-size: 10px; color: #28a745; margin-top: 2px;">
+                    🚛 {{ driver.vehicle_number|default:"No vehicle" }}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <button class="btn btn-sm btn-outline-primary" onclick="trackDriver({{ driver.id }})" 
+                        style="font-size: 10px; padding: 2px 6px;">
+                    <i class="fas fa-crosshairs"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Add hover effects
+    driverCard{{ driver.id }}.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = '#e9ecef';
+        this.style.borderColor = '#007bff';
+    });
+    
+    driverCard{{ driver.id }}.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = '#f8f9fa';
+        this.style.borderColor = '#dee2e6';
+    });
+    
+    driversList.appendChild(driverCard{{ driver.id }});
+    {% endif %}
+    {% endfor %}
+    
+    // Update status
+    if (driversWithLocation > 0) {
+        document.getElementById('olaMapStatus').textContent = `${driversWithLocation} drivers tracked`;
+        document.getElementById('olaMapStatus').className = 'badge bg-success ms-2';
+    } else {
+        driversList.innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #6c757d;">
+                <i class="fas fa-map-marker-alt fa-2x mb-2"></i>
+                <div>No driver locations available</div>
+                <small>Drivers need to update their locations</small>
+            </div>
+        `;
+        document.getElementById('olaMapStatus').textContent = 'No locations available';
+        document.getElementById('olaMapStatus').className = 'badge bg-warning ms-2';
+    }
+}
+
+function refreshOlaLocations() {
+    // Refresh driver locations on Ola Maps
+    showAlert('Refreshing driver locations...', 'info');
+    
+    // Simulate refresh (in production, this would fetch fresh data)
+    setTimeout(() => {
+        showAllDriversOla();
+        showAlert('Driver locations updated on Ola Maps', 'success');
+    }, 1000);
+}
+
+function generateStaticMapImage(lat, lng, driverName) {
+    // Generate static map URL (using generic map service)
+    const staticMapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=400x300&markers=color:blue%7C${lat},${lng}&key=YOUR_API_KEY`;
+    
+    // Show modal with static map
+    const modalHtml = `
+        <div class="modal fade" id="staticMapModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-map-marker-alt"></i> ${driverName} Location
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="alert alert-info">
+                            <h6>Driver Location Details</h6>
+                            <p><strong>Coordinates:</strong> ${lat}, ${lng}</p>
+                            <p><strong>Driver:</strong> ${driverName}</p>
+                            <div class="mt-3">
+                                <button class="btn btn-primary" onclick="openInGoogleMaps(${lat}, ${lng})">
+                                    <i class="fas fa-external-link-alt"></i> Open in Google Maps
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal and add new one
+    const existingModal = document.getElementById('staticMapModal');
+    if (existingModal) existingModal.remove();
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    new bootstrap.Modal(document.getElementById('staticMapModal')).show();
+}
+
+// Trip filtering
+document.getElementById('tripStatusFilter').addEventListener('change', function() {
+    filterTrips();
+});
+
+document.getElementById('tripSearchFilter').addEventListener('input', function() {
+    filterTrips();
+});
+
+function filterTrips() {
+    const statusFilter = document.getElementById('tripStatusFilter').value;
+    const searchFilter = document.getElementById('tripSearchFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('#tripsTable tbody tr');
+    
+    rows.forEach(row => {
+        const status = row.dataset.status;
+        const text = row.textContent.toLowerCase();
+        
+        const statusMatch = !statusFilter || status === statusFilter;
+        const searchMatch = !searchFilter || text.includes(searchFilter);
+        
+        row.style.display = statusMatch && searchMatch ? '' : 'none';
+    });
+}
+
+// Utility functions
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 5000);
+}
+
+function viewTripDetails(tripId) {
+    showAlert(`Trip #${tripId} details - Feature coming soon`, 'info');
+}
+
+// Auto-refresh for real-time updates
+setInterval(function() {
+    // Auto-refresh pending requests count
+    fetch('/supervisor-dashboard/')
+    .then(response => response.text())
+    .then(html => {
+        // Update specific sections without full reload
+        console.log('Dashboard data refreshed');
+    })
+    .catch(error => console.log('Auto-refresh error:', error));
+}, 30000); // Refresh every 30 seconds
+</script>
+{% endblock %}

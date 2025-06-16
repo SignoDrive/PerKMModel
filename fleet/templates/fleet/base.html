@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token }}" />
+    <title>{% block title %}DriveNowKM Fleet Management{% endblock %}</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="{% load static %}{% static 'css/styles.css' %}?v=3"
+    />
+    <link
+      rel="stylesheet"
+      href="{% load static %}{% static 'css/metric-override.css' %}?v=2"
+    />
+  </head>
+  <body>
+    {% if user.is_authenticated %}
+    <!-- Main Navigation -->
+    <nav class="navbar navbar-expand-lg simple-nav">
+      <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand simple-brand" href="{% url 'dashboard' %}">
+          <i class="fas fa-truck simple-brand-icon"></i>
+          <span class="simple-brand-text">DriveNowKM Fleet</span>
+        </a>
+
+        <!-- Toggle for mobile -->
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <!-- Main Navigation Links -->
+          <ul class="navbar-nav me-auto simple-nav-links">
+            <li class="nav-item">
+              <a
+                class="nav-link simple-nav-button"
+                href="{% url 'dashboard' %}"
+              >
+                <i class="fas fa-home simple-icon"></i>
+                <span class="simple-text">Home</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="nav-link simple-nav-button"
+                href="{% url 'driver_tracking' %}"
+              >
+                <i class="fas fa-map-marker-alt simple-icon"></i>
+                <span class="simple-text">Live Tracking</span>
+              </a>
+            </li>
+
+            {% if user.role == 'supervisor' %}
+            <li class="nav-item">
+              <a
+                class="nav-link simple-nav-button"
+                href="{% url 'supervisor_dashboard' %}"
+              >
+                <i class="fas fa-users simple-icon"></i>
+                <span class="simple-text">Supervisor Panel</span>
+              </a>
+            </li>
+            {% endif %} {% if user.role == 'admin' %}
+            <li class="nav-item">
+              <a
+                class="nav-link simple-nav-button"
+                href="{% url 'admin_dashboard' %}"
+              >
+                <i class="fas fa-cog simple-icon"></i>
+                <span class="simple-text">Admin Panel</span>
+              </a>
+            </li>
+            {% endif %}
+          </ul>
+
+          <!-- Right Side Tabs -->
+          <ul class="navbar-nav simple-right-tabs">
+            <!-- Current Time -->
+            <li class="nav-item simple-time-tab d-none d-lg-block">
+              <div class="nav-link simple-time">
+                <i class="fas fa-clock simple-time-icon"></i>
+                <span id="current-time" class="simple-time-text"
+                  >Loading...</span
+                >
+              </div>
+            </li>
+
+            <!-- Alerts Tab -->
+            <li class="nav-item">
+              <a
+                class="nav-link simple-tab-button simple-alerts-tab"
+                href="#"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#alertsPanel"
+              >
+                <i class="fas fa-bell simple-tab-icon"></i>
+                <span class="simple-tab-text">Alerts</span>
+                <span
+                  class="simple-tab-badge"
+                  id="notification-count"
+                  style="display: none"
+                  >0</span
+                >
+              </a>
+            </li>
+
+            <!-- User Tab -->
+            <li class="nav-item">
+              <a
+                class="nav-link simple-tab-button simple-user-tab"
+                href="#"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#userPanel"
+              >
+                <i class="fas fa-user-circle simple-tab-icon"></i>
+                <span class="simple-tab-text">Account</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Alerts Side Panel -->
+    <div
+      class="offcanvas offcanvas-end simple-panel"
+      tabindex="-1"
+      id="alertsPanel"
+    >
+      <div class="offcanvas-header simple-panel-header">
+        <h5 class="offcanvas-title">
+          <i class="fas fa-bell me-2"></i>Your Alerts
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+        ></button>
+      </div>
+      <div class="offcanvas-body simple-panel-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="text-muted">Recent notifications</span>
+          <button
+            class="btn btn-sm simple-clear-all-btn"
+            onclick="markAllNotificationsRead()"
+          >
+            Clear All
+          </button>
+        </div>
+        <div id="notification-list" class="simple-notifications-container">
+          <div class="text-center p-3 text-muted">No new alerts</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Account Side Panel -->
+    <div
+      class="offcanvas offcanvas-end simple-panel"
+      tabindex="-1"
+      id="userPanel"
+    >
+      <div class="offcanvas-header simple-panel-header">
+        <h5 class="offcanvas-title">
+          <i class="fas fa-user-circle me-2"></i>Your Account
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="offcanvas"
+        ></button>
+      </div>
+      <div class="offcanvas-body simple-panel-body">
+        <div class="simple-user-profile">
+          <div class="simple-profile-card">
+            <div class="simple-profile-avatar">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="simple-profile-info">
+              <h6 class="simple-profile-name">
+                {{ user.first_name|default:user.username }} {{
+                user.last_name|default:"" }}
+              </h6>
+              <p class="simple-profile-role">{{ user.get_role_display }}</p>
+              <p class="simple-profile-email">
+                {{ user.email|default:"No email set" }}
+              </p>
+            </div>
+          </div>
+
+          <div class="simple-account-actions">
+            <a
+              href="#"
+              class="simple-action-btn"
+              onclick="togglePasswordForm(event)"
+            >
+              <i class="fas fa-user-edit"></i>
+              Edit Profile
+            </a>
+
+            <a href="#" class="simple-action-btn">
+              <i class="fas fa-cog"></i>
+              Settings
+            </a>
+            <a
+              href="{% url 'logout' %}"
+              class="simple-action-btn simple-logout-btn"
+            >
+              <i class="fas fa-sign-out-alt"></i>
+              Sign Out
+            </a>
+          </div>
+
+          <div id="password-form-container" class="mt-3">
+            <form method="POST" action="{% url 'change_password' %}">
+              {% csrf_token %}
+              <div class="mb-2">
+                <label class="form-label">Current Password</label>
+                <input
+                  type="password"
+                  name="old_password"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">New Password</label>
+                <input
+                  type="password"
+                  name="new_password1"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div class="mb-2">
+                <label class="form-label">Confirm New Password</label>
+                <input
+                  type="password"
+                  name="new_password2"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <div
+                id="password-change-message"
+                class="text-success small mb-2"
+                style="display: none"
+              ></div>
+              <button type="submit" class="btn btn-primary btn-sm">
+                Change Password
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <!-- Login Navigation for Non-Authenticated Users -->
+    <nav class="navbar navbar-expand-lg simple-nav">
+      <div class="container-fluid">
+        <a class="navbar-brand simple-brand" href="{% url 'login' %}">
+          <i class="fas fa-truck simple-brand-icon"></i>
+          <span class="simple-brand-text">DriveNowKM Fleet</span>
+        </a>
+        <a href="{% url 'login' %}" class="btn btn-primary">
+          <i class="fas fa-sign-in-alt me-2"></i>Sign In
+        </a>
+      </div>
+    </nav>
+    {% endif %}
+
+    <main class="simple-main-content">
+      {% if messages %} {% for message in messages %}
+      <div
+        class="alert alert-{{ message.tags }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+        ></button>
+      </div>
+      {% endfor %} {% endif %} {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Live Clock Function
+      function updateTime() {
+        const now = new Date();
+        const options = {
+          weekday: "short",
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        };
+        const timeString = now.toLocaleDateString("en-US", options);
+        const timeElement = document.getElementById("current-time");
+        if (timeElement) {
+          timeElement.textContent = timeString;
+        }
+      }
+
+      // Update time immediately and then every second
+      updateTime();
+      setInterval(updateTime, 1000);
+
+      // Notification System
+      let notificationPolling;
+
+      function loadNotifications() {
+        fetch("/api/notifications/")
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Authentication required");
+            }
+            return response.json();
+          })
+          .then((data) => {
+            const notificationList =
+              document.getElementById("notification-list");
+            const notificationCount =
+              document.getElementById("notification-count");
+
+            if (data.notifications && data.notifications.length > 0) {
+              // Update count badge
+              const unreadCount = data.notifications.filter(
+                (n) => !n.is_read
+              ).length;
+              if (unreadCount > 0) {
+                notificationCount.textContent = unreadCount;
+                notificationCount.style.display = "block";
+              } else {
+                notificationCount.style.display = "none";
+              }
+
+              // Update notification list
+              notificationList.innerHTML = "";
+              data.notifications.slice(0, 10).forEach((notification) => {
+                const notificationItem = document.createElement("div");
+                notificationItem.className = `simple-notification-item ${
+                  !notification.is_read ? "unread" : ""
+                }`;
+                notificationItem.innerHTML = `
+                                <div class="simple-notification-content">
+                                    <h6 class="simple-notification-title">${
+                                      notification.title
+                                    }</h6>
+                                    <p class="simple-notification-message">${
+                                      notification.message
+                                    }</p>
+                                    <small class="simple-notification-time">${new Date(
+                                      notification.created_at
+                                    ).toLocaleString()}</small>
+                                </div>
+                            `;
+                notificationList.appendChild(notificationItem);
+              });
+            } else {
+              notificationList.innerHTML =
+                '<div class="text-center p-3 text-muted">No new alerts</div>';
+              notificationCount.style.display = "none";
+            }
+          })
+          .catch((error) => {
+            console.log("Notifications will be available once authenticated");
+          });
+      }
+
+      function markAllNotificationsRead() {
+        fetch("/api/notifications/mark-all-read/", {
+          method: "POST",
+          headers: {
+            "X-CSRFToken":
+              document.querySelector("[name=csrfmiddlewaretoken]")?.value || "",
+            "Content-Type": "application/json",
+          },
+        }).then(() => {
+          loadNotifications();
+        });
+      }
+
+      // Load notifications on page load only (no automatic polling)
+      document.addEventListener("DOMContentLoaded", function () {
+        loadNotifications();
+        // Automatic polling disabled to prevent tab content interference
+      });
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+          for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + "=")) {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
+      window.csrfToken =
+        document.querySelector("meta[name='csrf-token']")?.content ||
+        getCookie("csrftoken");
+
+      document.addEventListener("DOMContentLoaded", function () {
+        const passwordForm = document.querySelector(
+          "#password-form-container form"
+        );
+        if (passwordForm) {
+          passwordForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(passwordForm);
+            const csrfToken = document.querySelector(
+              "[name=csrfmiddlewaretoken]"
+            ).value;
+
+            fetch("{% url 'change_password' %}", {
+              method: "POST",
+              headers: {
+                "X-CSRFToken": csrfToken,
+                "X-Requested-With": "XMLHttpRequest",
+              },
+              body: formData,
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                const msg = document.getElementById("password-change-message");
+                if (data.success) {
+                  msg.innerText = "Password changed successfully.";
+                  msg.classList.remove("text-danger");
+                  msg.classList.add("text-success");
+                  msg.style.display = "block";
+                  passwordForm.reset();
+                } else if (data.errors) {
+                  msg.innerText =
+                    "Error: " + Object.values(data.errors).join(", ");
+                  msg.classList.remove("text-success");
+                  msg.classList.add("text-danger");
+                  msg.style.display = "block";
+                }
+              })
+              .catch((error) => console.error("Password change failed", error));
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

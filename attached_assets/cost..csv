@@ -1,0 +1,30 @@
+S.N.,Truck Type ,GW,Net Weight,Avg. (kmpl),Driver Salary (pm),Distance traveled in a trip,Fuel Cost,Single Driver Cost,Double Driver Cost,En route Expenses,Per km. cost Single Driver,Per km. cost Double Driver
+1,6 Tyre trucks OPEN ,13000,7000,6.00,40000,7000,15.33,5.71,11.43,2.00,26.50,33.08
+2,6 Tyre trucks CLOSED,13000,7000,6.00,40000,7000,15.33,5.71,11.43,2.00,26.50,33.08
+3,6 Tyre trucks OPEN ,16000,10000,5.50,40000,6000,16.73,6.67,13.33,2.00,29.20,36.87
+4,6 Tyre trucks CLOSED,16000,10000,5.50,40000,7000,16.73,5.71,11.43,2.00,28.11,34.68
+5,10 tyres Multi axle Truck OPEN,25000,18000,4.50,40000,6500,20.44,6.15,12.31,2.00,32.89,39.96
+6,10 tyres Multi axle Truck CLOSED,25000,18000,4.50,40000,6500,20.44,6.15,12.31,2.00,32.89,39.96
+7,12 Tyre Sigle Chessis truck Rigid OPEN,31000,25000,4.00,40000,7000,23.00,5.71,11.43,2.00,35.32,41.89
+8,14 Tyre Sigle Chessis truck Rigid OPEN,37000,30000,3.50,40000,6500,26.29,6.15,12.31,2.00,39.61,46.68
+9,14 Tyre Trailer FLAT BED ,29000,22000,4.00,50000,6000,23.00,8.33,16.67,2.00,38.33,47.92
+10,14 Tyre Trailer CONTAINER,29000,22000,4.00,50000,6000,23.00,8.33,16.67,2.00,38.33,47.92
+11,16 Tyre Trailer FLAT BED ,35000,27000,3.75,50000,6000,24.53,8.33,16.67,2.00,40.10,49.68
+12,16 Tyre Trailer CONTAINER,35000,27000,3.75,50000,6000,24.53,8.33,16.67,2.00,40.10,49.68
+13,18 Tyre Trailer ,40200,35000,2.50,50000,4500,36.80,11.11,22.22,2.00,57.40,70.18
+14,22 Tyre  Trailer ,49000,40000,2.25,50000,4500,40.89,11.11,22.22,2.00,62.10,74.88
+,  ,,,,,,,,,,,
+Assumptions,,,,,,,,,,,,
+1,Vehicles are 0-5 years old,,,,,,,,,,,
+2,Diesel price at Delhi taken as on date in Rs.,92,,,,,,,,,,
+3,Toll tax will be debited through Fastag not in Signo scope,,,,,,,,,,,
+,,,,,,,,,,,,
+Exclusions for Above Calculation,,,,,,,,,,,,
+1,Maintenance Cost,,,,,,,,,,,
+2,Tyre Cost,,,,,,,,,,,
+3,Road Tax,,,,,,,,,,,
+4,Insurance,,,,,,,,,,,
+5,EMI of the Vehicle,,,,,,,,,,,
+6,Loading and Unloading Charges/ dala,,,,,,,,,,,
+7,Diesel variation more than 5%,,,,,,,,,,,
+8,Bihar Hieght/ Mechanical Charges & Danda Tax,,,,,,,,,,,

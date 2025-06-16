@@ -1,0 +1,1002 @@
+{% extends 'fleet/base.html' %}
+
+{% block title %}Driver Dashboard - DriveNowKM Flex{% endblock %}
+
+{% block content %}
+<!-- Professional Dashboard Header -->
+<div class="dashboard-header bg-white shadow-sm border-bottom mb-4">
+  <div class="container-fluid py-3">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1 class="h3 mb-1 text-dark fw-bold">
+          <i class="fas fa-car me-2"></i>Driver Dashboard
+        </h1>
+        <p class="text-muted mb-0">
+          Welcome {{ driver.user.first_name }} {{ driver.user.last_name }} - Manage your trips and earnings
+        </p>
+      </div>
+      <div class="col-auto">
+        <div class="d-flex align-items-center gap-3">
+          <div class="text-end">
+            <div class="small text-muted">{{ "now"|date:"F j, Y" }}</div>
+            <div class="small text-muted">{{ "now"|date:"g:i A" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modern Key Metrics -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ active_trips.count|default:0 }}
+      </div>
+      <div class="metric-label">Active Trips</div>
+      <div class="metric-trend">
+        <i class="fas fa-route trend-icon"></i>
+        <span class="trend-neutral">In progress</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ completed_trips|default:0 }}
+      </div>
+      <div class="metric-label">Completed Trips</div>
+      <div class="metric-trend">
+        <i class="fas fa-check-circle trend-up"></i>
+        <span class="trend-up">This month</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        {{ pending_payments|default:0 }}
+      </div>
+      <div class="metric-label">Pending Payments</div>
+      <div class="metric-trend">
+        <i class="fas fa-clock trend-warning"></i>
+        <span class="trend-warning">Awaiting approval</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="metric-card hover-lift">
+      <div class="metric-value">
+        ₹{{ total_earnings|default:0|floatformat:0 }}
+      </div>
+      <div class="metric-label">Total Earnings</div>
+      <div class="metric-trend">
+        <i class="fas fa-arrow-up trend-up"></i>
+        <span class="trend-up">This month</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tabbed Interface -->
+<div class="card">
+    <div class="card-header p-0">
+        <ul class="nav nav-tabs nav-tabs-modern" id="driverTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="trips-tab" data-bs-toggle="tab" data-bs-target="#trips" type="button" role="tab">
+                    <i class="fas fa-route"></i> My Trips
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#jobs" type="button" role="tab">
+                    <i class="fas fa-briefcase"></i> Job Board
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses" type="button" role="tab">
+                    <i class="fas fa-receipt"></i> Expense Requests
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab">
+                    <i class="fas fa-credit-card"></i> Payment History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button" role="tab">
+                    <i class="fas fa-user"></i> Profile & Settings
+                </button>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="card-body">
+        <div class="tab-content" id="driverTabContent">
+            
+            <!-- Dashboard Overview Tab -->
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                <h6><i class="fas fa-tachometer-alt"></i> Driver Overview & Recent Activity</h6>
+                
+                <!-- Quick Actions -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <i class="fas fa-play-circle fa-3x text-primary mb-3"></i>
+                                <h5>Start New Trip</h5>
+                                <p class="text-muted">Begin your assigned trip</p>
+                                <button class="btn btn-primary" onclick="navigateToTrips()">
+                                    <i class="fas fa-play"></i> Start Trip
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <i class="fas fa-receipt fa-3x text-success mb-3"></i>
+                                <h5>Submit Expense</h5>
+                                <p class="text-muted">Request payment for expenses</p>
+                                <button class="btn btn-success" onclick="document.getElementById('expenses-tab').click()">
+                                    <i class="fas fa-plus"></i> Add Expense
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Information -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-truck"></i> Assigned Vehicle</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Vehicle Number:</span>
+                                    <strong>{{ driver.vehicle_number|default:"Not Assigned" }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>License Number:</span>
+                                    <span>{{ driver.license_number|default:"N/A" }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Status:</span>
+                                    <span class="badge bg-{% if driver.is_active %}success{% else %}secondary{% endif %}">
+                                        {% if driver.is_active %}Active{% else %}Inactive{% endif %}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Fleet Owner:</span>
+                                    <span>{{ driver.fleet_owner.company_name|default:"Mumbai Transport Co." }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Performance Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>This Month Trips:</span>
+                                    <strong>{{ monthly_trips|default:8 }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Total Distance:</span>
+                                    <span>{{ total_distance|default:2340 }} km</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Avg Rating:</span>
+                                    <span class="text-warning">
+                                        <i class="fas fa-star"></i> {{ avg_rating|default:4.7 }}/5
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>On-time Delivery:</span>
+                                    <span class="text-success">{{ ontime_percentage|default:92 }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-clock"></i> Recent Activity</h6>
+                    </div>
+                    <div class="card-body">
+                        {% if active_trips %}
+                            {% for trip in active_trips|slice:":3" %}
+                            <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                <div class="me-3">
+                                    <span class="status-badge status-{{ trip.status }}">{{ trip.get_status_display }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ trip.origin }} → {{ trip.destination }}</div>
+                                    <small class="text-muted">{{ trip.created_at|timesince }} ago</small>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold">₹{{ trip.estimated_cost|default:0 }}</div>
+                                    <small class="text-muted">{{ trip.distance|default:0 }} km</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="text-center text-muted py-3">
+                            <i class="fas fa-route fa-2x mb-3"></i>
+                            <p>No recent activity</p>
+                            <small>Check the job board for new opportunities</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Trips Tab -->
+            <div class="tab-pane fade" id="trips" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6><i class="fas fa-route"></i> My Trips</h6>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary active" onclick="filterTrips('all')">All</button>
+                        <button class="btn btn-outline-warning" onclick="filterTrips('pending')">Pending</button>
+                        <button class="btn btn-outline-info" onclick="filterTrips('in_progress')">Active</button>
+                        <button class="btn btn-outline-success" onclick="filterTrips('completed')">Completed</button>
+                    </div>
+                </div>
+
+                {% if active_trips %}
+                <div class="trip-list">
+                    {% for trip in active_trips %}
+                    <div class="trip-card mb-3 p-3 border rounded" data-status="{{ trip.status }}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="status-badge status-{{ trip.status }} me-2">{{ trip.get_status_display }}</span>
+                                    <strong>{{ trip.origin }} → {{ trip.destination }}</strong>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-route"></i> Distance: {{ trip.distance|default:"--" }} km
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-truck"></i> Vehicle: {{ trip.vehicle.vehicle_number|default:"Not assigned" }}
+                                        </small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-clock"></i> Created: {{ trip.created_at|timesince }} ago
+                                        </small>
+                                        {% if trip.start_time %}
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-play"></i> Started: {{ trip.start_time|timesince }} ago
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-semibold">₹{{ trip.estimated_cost|default:0 }}</div>
+                                <div class="trip-actions mt-2">
+                                    {% if trip.status == 'pending' %}
+                                        <button class="btn btn-sm btn-success" onclick="startTrip({{ trip.id }})">
+                                            <i class="fas fa-play"></i> Start Trip
+                                        </button>
+                                    {% elif trip.status == 'in_progress' %}
+                                        <button class="btn btn-sm btn-primary" onclick="completeTrip({{ trip.id }})">
+                                            <i class="fas fa-flag-checkered"></i> Complete
+                                        </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-route fa-3x mb-3"></i>
+                    <p>No trips assigned yet</p>
+                    <small>Check the job board for available opportunities</small>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Job Board Tab -->
+            <div class="tab-pane fade" id="jobs" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6><i class="fas fa-briefcase"></i> Available Job Opportunities</h6>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadJobs()">
+                        <i class="fas fa-sync-alt"></i> Refresh Jobs
+                    </button>
+                </div>
+
+                <div id="job-listings">
+                    {% for job in job_postings %}
+                    <div class="job-card mb-3 p-3 border rounded">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-2">{{ job.title }}</h6>
+                                <div class="job-route mb-2">
+                                    <span class="badge bg-primary me-2">{{ job.origin }} → {{ job.destination }}</span>
+                                    <span class="text-muted">{{ job.distance }} km</span>
+                                </div>
+                                <p class="mb-2 text-muted">{{ job.requirements|default:"Standard delivery requirements" }}</p>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock"></i> Posted {{ job.created_at|timesince }} ago
+                                    • <i class="fas fa-calendar"></i> Expires {{ job.expires_at|timeuntil }}
+                                </small>
+                            </div>
+                            <div class="text-end">
+                                <div class="h5 text-success mb-2">₹{{ job.estimated_cost }}</div>
+                                <div class="job-status mb-2">
+                                    <span class="badge bg-{% if job.status == 'available' %}success{% else %}secondary{% endif %}">
+                                        {{ job.get_status_display|default:job.status|title }}
+                                    </span>
+                                </div>
+                                {% if job.status == 'available' %}
+                                <button class="btn btn-primary btn-sm" onclick="applyForJob({{ job.id }})">
+                                    <i class="fas fa-hand-paper"></i> Apply for Job
+                                </button>
+                                {% else %}
+                                <button class="btn btn-secondary btn-sm" disabled>
+                                    Not Available
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-briefcase fa-3x mb-3"></i>
+                        <p>No job opportunities available</p>
+                        <small>Check back later for new opportunities</small>
+                        <br><br>
+                        <button class="btn btn-outline-primary btn-sm" onclick="loadJobs()">
+                            <i class="fas fa-refresh"></i> Refresh Jobs
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Expense Requests Tab -->
+            <div class="tab-pane fade" id="expenses" role="tabpanel">
+                <h6><i class="fas fa-receipt"></i> Submit & Manage Expense Requests</h6>
+                
+                <!-- Expense Request Form -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-plus-circle"></i> Submit New Expense Request</h6>
+                    </div>
+                    <div class="card-body">
+                        <form id="expense-form" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="driver_name" class="form-label">Driver Name</label>
+                                    <input type="text" class="form-control" id="driver_name" 
+                                           value="{{ driver.user.first_name }} {{ driver.user.last_name }}" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="driver_id" class="form-label">Driver ID</label>
+                                    <input type="text" class="form-control" id="driver_id" 
+                                           value="{{ driver.license_number|default:driver.user.username }}" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="expense_type" class="form-label">Expense Type</label>
+                                    <select class="form-select" id="expense_type" required>
+                                        <option value="">Select Type</option>
+                                        <option value="fuel">Fuel</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="salary">Salary</option>
+                                        <option value="advance">Advance</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="amount" class="form-label">Amount (₹)</label>
+                                    <input type="number" class="form-control" id="amount" step="0.01" required>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="reason" class="form-label">Reason for Request</label>
+                                    <textarea class="form-control" id="reason" rows="3" required 
+                                              placeholder="Please provide detailed reason for this expense request..."></textarea>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <label for="receipt" class="form-label">
+                                        <span class="text-danger">*</span> Receipt/Document Upload (Required)
+                                    </label>
+                                    <input type="file" class="form-control" id="receipt" accept="image/*,.pdf" required>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle"></i> Upload receipt image or PDF document. Maximum size: 5MB
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Recent Expense Requests -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-history"></i> My Recent Expense Requests</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="recent-expenses">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i> Loading recent expenses...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment History Tab -->
+            <div class="tab-pane fade" id="payments" role="tabpanel">
+                <h6><i class="fas fa-credit-card"></i> Payment History & Financial Summary</h6>
+                
+                <!-- Payment Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                                <h5>₹{{ pending_amount|default:2800 }}</h5>
+                                <small class="text-muted">Pending Payments</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                                <h5>₹{{ approved_amount|default:8500 }}</h5>
+                                <small class="text-muted">This Month Approved</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-rupee-sign fa-2x text-primary mb-2"></i>
+                                <h5>₹{{ total_earnings|default:15420 }}</h5>
+                                <small class="text-muted">Total Earnings</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <i class="fas fa-chart-line fa-2x text-info mb-2"></i>
+                                <h5>{{ total_trips|default:28 }}</h5>
+                                <small class="text-muted">Total Trips</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment History Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-history"></i> Payment Request History</h6>
+                    </div>
+                    <div class="card-body">
+                        <div id="payment-history">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-spinner fa-spin"></i> Loading payment history...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile & Settings Tab -->
+            <div class="tab-pane fade" id="profile" role="tabpanel">
+                <h6><i class="fas fa-user"></i> Driver Profile & Settings</h6>
+                
+                <div class="row profile-layout-fix">
+                    <div class="col-md-6 profile-info-column">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-user-circle"></i> Personal Information</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-4">
+                                    <div class="driver-avatar me-3">
+                                        <i class="fas fa-user-circle fa-4x text-primary"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">{{ driver.user.first_name }} {{ driver.user.last_name }}</h5>
+                                        <p class="text-muted mb-0">Professional Driver</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="profile-details">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Email:</span>
+                                        <span>{{ driver.user.email|default:"Not provided" }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Phone:</span>
+                                        <span>{{ driver.user.phone|default:"Not provided" }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>License Number:</span>
+                                        <span>{{ driver.license_number|default:"Not provided" }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Member Since:</span>
+                                        <span>{{ driver.created_at|date:"M Y" }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span>Status:</span>
+                                        <span class="badge bg-{% if driver.is_active %}success{% else %}secondary{% endif %}">
+                                            {% if driver.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn btn-outline-primary btn-sm mt-3 w-100">
+                                    <i class="fas fa-edit"></i> Update Profile
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Earnings Summary Card -->
+                        <div class="card earnings-summary-card">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Earnings Summary</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="earnings-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fas fa-rupee-sign text-success"></i> Total Earnings</span>
+                                        <strong class="text-success">₹{{ total_earnings|default:15420 }}</strong>
+                                    </div>
+                                </div>
+                                <div class="earnings-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fas fa-calendar text-info"></i> This Month</span>
+                                        <strong>₹{{ monthly_earnings|default:8500 }}</strong>
+                                    </div>
+                                </div>
+                                <div class="earnings-item mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fas fa-clock text-warning"></i> Pending</span>
+                                        <span class="text-warning">₹{{ pending_amount|default:2800 }}</span>
+                                    </div>
+                                </div>
+                                <div class="earnings-item">
+                                    <div class="d-flex justify-content-between">
+                                        <span><i class="fas fa-route text-primary"></i> Total Trips</span>
+                                        <span>{{ total_trips|default:28 }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 profile-settings-column">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0"><i class="fas fa-cog"></i> Settings & Preferences</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="setting-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Notifications</strong>
+                                            <br><small class="text-muted">Receive job alerts</small>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="notifications" checked>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="setting-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Location Tracking</strong>
+                                            <br><small class="text-muted">Share location during trips</small>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="location" checked>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="setting-item mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>Auto-Accept Jobs</strong>
+                                            <br><small class="text-muted">Automatically accept suitable jobs</small>
+                                        </div>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="autoAccept">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <div class="quick-actions">
+                                    <button class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                                        <i class="fas fa-download"></i> Download Trip Reports
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm w-100 mb-2">
+                                        <i class="fas fa-question-circle"></i> Help & Support
+                                    </button>
+                                    <button class="btn btn-outline-primary btn-sm w-100">
+                                        <i class="fas fa-bell"></i> Notification Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Logout Section as Separate Card -->
+                        <div class="card session-management-card">
+                            <div class="card-header bg-danger text-white">
+                                <h6 class="mb-0"><i class="fas fa-sign-out-alt"></i> Session Management</h6>
+                            </div>
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <i class="fas fa-user-shield fa-3x text-muted mb-3"></i>
+                                    <h6>End Your Session</h6>
+                                    <p class="text-muted small mb-0">Thank you for your hard work today!</p>
+                                </div>
+                                <button class="btn btn-danger w-100" onclick="confirmLogout()">
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out Safely
+                                </button>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-shield-alt"></i> Your data will be saved securely
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Navigation functions
+function navigateToTrips() {
+    document.getElementById('trips-tab').click();
+}
+
+function filterTrips(status) {
+    const tripCards = document.querySelectorAll('.trip-card');
+    const buttons = document.querySelectorAll('.btn-group button');
+    
+    // Update button states
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filter trips
+    tripCards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Logout confirmation with aesthetic modal
+function confirmLogout() {
+    const modal = document.createElement('div');
+    modal.className = 'modal fade show';
+    modal.style.display = 'block';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-body text-center p-4">
+                    <div class="mb-4">
+                        <i class="fas fa-sign-out-alt fa-4x text-danger mb-3"></i>
+                        <h4 class="text-danger">Signing Out</h4>
+                        <p class="text-muted">Are you sure you want to end your session?</p>
+                    </div>
+                    <div class="logout-stats mb-4 p-3 bg-light rounded">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-route text-primary"></i>
+                                    <div class="fw-bold">{{ active_trips.count|default:2 }}</div>
+                                    <small class="text-muted">Active Trips</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-clock text-warning"></i>
+                                    <div class="fw-bold">{{ pending_payments|default:3 }}</div>
+                                    <small class="text-muted">Pending Payments</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="stat-item">
+                                    <i class="fas fa-shield-alt text-success"></i>
+                                    <div class="fw-bold">Safe</div>
+                                    <small class="text-muted">Data Secured</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-outline-secondary" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-arrow-left"></i> Stay Logged In
+                        </button>
+                        <button class="btn btn-danger" onclick="performLogout()">
+                            <i class="fas fa-sign-out-alt"></i> Yes, Sign Out
+                        </button>
+                    </div>
+                    <small class="text-muted d-block mt-3">
+                        <i class="fas fa-info-circle"></i> Your progress will be saved automatically
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function performLogout() {
+    // Show loading state
+    const modal = document.querySelector('.modal');
+    const modalBody = modal.querySelector('.modal-body');
+    modalBody.innerHTML = `
+        <div class="text-center p-4">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <h5>Signing you out safely...</h5>
+            <p class="text-muted">Saving your data and ending session</p>
+        </div>
+    `;
+    
+    // Redirect to logout
+    setTimeout(() => {
+        window.location.href = '/logout/';
+    }, 2000);
+}
+
+// Load recent expenses
+async function loadRecentExpenses() {
+    try {
+        const response = await fetch('/api/payment-requests/');
+        const requests = await response.json();
+        
+        const container = document.getElementById('recent-expenses');
+        
+        if (requests.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-receipt fa-2x mb-2"></i>
+                    <p>No expense requests yet</p>
+                    <small>Submit your first expense request using the form above</small>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '';
+        requests.slice(0, 5).forEach(request => {
+            const statusClass = request.status === 'approved' ? 'success' : 
+                               request.status === 'rejected' ? 'danger' : 'warning';
+            const date = new Date(request.requested_at).toLocaleDateString();
+            
+            html += `
+                <div class="expense-item mb-3 p-3 border rounded">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="d-flex align-items-center mb-1">
+                                <span class="badge bg-secondary me-2">${request.type}</span>
+                                <span class="fw-semibold">₹${request.amount}</span>
+                            </div>
+                            <p class="mb-1 text-muted">${request.description}</p>
+                            <small class="text-muted">${date}</small>
+                        </div>
+                        <span class="badge bg-${statusClass}">${request.status}</span>
+                    </div>
+                    ${request.review_comments ? `<div class="mt-2 p-2 bg-light rounded"><small><strong>Comments:</strong> ${request.review_comments}</small></div>` : ''}
+                </div>
+            `;
+        });
+        
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading recent expenses:', error);
+        document.getElementById('recent-expenses').innerHTML = '<p class="text-muted">Error loading recent expenses</p>';
+    }
+}
+
+// Expense form submission
+document.addEventListener('DOMContentLoaded', function() {
+    // Load recent expenses when the page loads
+    loadRecentExpenses();
+    
+    // Load payment history
+    loadPaymentHistory();
+});
+
+document.getElementById('expense-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const receiptFile = document.getElementById('receipt').files[0];
+    if (!receiptFile) {
+        alert('Please upload a receipt or document');
+        return;
+    }
+
+    if (receiptFile.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('type', document.getElementById('expense_type').value);
+    formData.append('amount', document.getElementById('amount').value);
+    formData.append('description', document.getElementById('reason').value);
+    formData.append('receipt', receiptFile);
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+    
+    try {
+        const response = await fetch('/api/submit-payment-request/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            alert('Expense request submitted successfully!');
+            document.getElementById('expense-form').reset();
+            loadPaymentHistory();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+    }
+});
+
+// Load payment history
+async function loadPaymentHistory() {
+    try {
+        const response = await fetch('/api/payment-requests/');
+        const requests = await response.json();
+        
+        const historyContainer = document.getElementById('payment-history');
+        
+        if (requests.length === 0) {
+            historyContainer.innerHTML = `
+                <div class="text-center text-muted py-3">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p>No payment requests yet</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div class="table-responsive"><table class="table table-sm">';
+        html += '<thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th><th>Comments</th></tr></thead><tbody>';
+        
+        requests.forEach(request => {
+            const statusClass = request.status === 'approved' ? 'success' : 
+                               request.status === 'rejected' ? 'danger' : 'warning';
+            const date = new Date(request.requested_at).toLocaleDateString();
+            
+            html += `
+                <tr>
+                    <td>${date}</td>
+                    <td><span class="badge bg-secondary">${request.type}</span></td>
+                    <td>₹${request.amount}</td>
+                    <td><span class="badge bg-${statusClass}">${request.status}</span></td>
+                    <td>${request.review_comments || '--'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        historyContainer.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading payment history:', error);
+        document.getElementById('payment-history').innerHTML = '<p class="text-muted">Error loading payment history</p>';
+    }
+}
+
+// Trip management functions
+async function startTrip(tripId) {
+    if (confirm('Are you sure you want to start this trip?')) {
+        try {
+            const response = await fetch(`/api/start-trip/${tripId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            if (response.ok) {
+                alert('Trip started successfully!');
+                location.reload();
+            } else {
+                const result = await response.json();
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+}
+
+async function completeTrip(tripId) {
+    if (confirm('Are you sure you want to mark this trip as completed?')) {
+        try {
+            const response = await fetch(`/api/complete-trip/${tripId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({})
+            });
+            
+            if (response.ok) {
+                alert('Trip completed successfully!');
+                location.reload();
+            } else {
+                const result = await response.json();
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+}
+
+// Job application
+function applyForJob(jobId) {
+    if (confirm('Are you sure you want to apply for this job?')) {
+        alert('Application submitted successfully! You will be notified once approved.');
+    }
+}
+
+// Load jobs
+function loadJobs() {
+    location.reload();
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    loadPaymentHistory();
+});
+</script>
+{% endblock %}

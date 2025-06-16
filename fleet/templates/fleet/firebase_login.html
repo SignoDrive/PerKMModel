@@ -1,0 +1,558 @@
+{% extends 'fleet/base.html' %}
+{% load static %}
+
+{% block title %}Login - DriveNowKM{% endblock %}
+
+{% block extra_css %}
+<style>
+.login-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    padding: 2rem;
+    width: 100%;
+    max-width: 400px;
+    margin: 1rem;
+}
+
+.brand-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.brand-logo h1 {
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.brand-logo p {
+    color: #666;
+    margin: 0;
+}
+
+.btn-google {
+    background: #db4437;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    width: 100%;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.btn-google:hover {
+    background: #c23321;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(219, 68, 55, 0.3);
+}
+
+.divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e0e0e0;
+}
+
+.divider span {
+    background: white;
+    padding: 0 1rem;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.form-control {
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    width: 100%;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.auth-toggle {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-toggle a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-toggle a:hover {
+    text-decoration: underline;
+}
+
+.loading-spinner {
+    display: none;
+    text-align: center;
+    padding: 1rem;
+}
+
+.alert {
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container" id="login-section">
+    <div class="login-card">
+        <div class="brand-logo">
+            <h1><i class="fas fa-truck text-primary"></i> DriveNowKM</h1>
+            <p>Smart Fleet Management System</p>
+        </div>
+
+        <div id="login-form" style="display: block;">
+
+
+
+
+            <!-- <button type="button" class="btn btn-google" onclick="handleGoogleLogin()">
+                <i class="fab fa-google me-2"></i>Continue with Google
+            </button> -->
+
+            <!-- <div class="divider">
+                <span>or</span>
+            </div> -->
+
+            <form onsubmit = "handleEmailLogin(event)">
+                <div class="mb-3">
+                    
+                    <input type="email" class="form-control" id="email" placeholder="Email address" required>
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </button>
+            </form>
+
+            <div class="auth-toggle">
+                <a href="#" onclick="showRegisterForm()">Don't have an account? Sign up</a>
+            </div>
+            
+            <!-- Test Credentials Display -->
+            
+        </div>
+
+        <div id="register-form" style="display: none;">
+            <form onsubmit="handleEmailRegister(event)">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="register-first-name" placeholder="First Name" required>
+                </div>
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="register-last-name" placeholder="Last Name" required>
+                </div>
+                <div class="mb-3">
+                    <input type="email" class="form-control" id="register-email" placeholder="Email address" required>
+                </div>
+                <div class="mb-3">
+                    <select class="form-control" id="register-role" required>
+                        <!-- <option value="">Select Your Role</option> -->
+                        <option value="fleet_owner">Fleet Owner</option>
+                        <!-- <option value="driver">Driver</option>
+                        <option value="supervisor">Supervisor</option> -->
+                    </select>
+                </div>
+                <div class="mb-3" id="company-name-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-company-name" placeholder="Company Name (Optional)">
+                </div>
+                <div class="mb-3" id="license-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-license" placeholder="License Number">
+                </div>
+                <div class="mb-3" id="vehicle-field" style="display: none;">
+                    <input type="text" class="form-control" id="register-vehicle" placeholder="Vehicle Number">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="register-password" placeholder="Password (min 6 characters)" required minlength="6">
+                </div>
+                <div class="mb-3">
+                    <input type="password" class="form-control" id="confirm-password" placeholder="Confirm password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+            </form>
+
+            <div class="auth-toggle">
+                <a href="#" onclick="showLoginForm()">Already have an account? Sign in</a>
+            </div>
+        </div>
+
+        <div class="loading-spinner" id="loading-spinner">
+            <!-- <div class="spinner-border text-primary" role="status"> -->
+                 <!-- <span class="visually-hidden">Loading...</span> -->
+            <!-- </div> -->
+            <!-- <p class="mt-2">Signing you in...</p> -->
+        </div>
+    </div>
+</div>
+
+<div id="dashboard-section" style="display: none;">
+    <!-- Dashboard content will be loaded here -->
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Welcome to DriveNowKM Dashboard</h2>
+            <div id="user-info"></div>
+        </div>
+        <div class="text-center">
+            <p>Loading your dashboard...</p>
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC8MDJp71-_9kPqYtAhni8UmGQDnUzIlYA",
+  authDomain: "signo-fleet.firebaseapp.com",
+  projectId: "signo-fleet",
+  storageBucket: "signo-fleet.firebasestorage.app",
+  messagingSenderId: "958560675158",
+  appId: "1:958560675158:web:2704882b13d282c57362f7",
+  measurementId: "G-RQ5YWWZL4M"
+
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+// Google Sign-In Function
+window.handleGoogleLogin = async () => {
+    console.log("Google login triggered");
+    showLoading();
+    
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.addScope('email');
+        provider.addScope('profile');
+        
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        
+        // Send user data to Django backend for synchronization
+        await syncUserWithBackend(user, 'fleet_owner'); // Default role for Google sign-in
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Google Sign-In Error:', error);
+        
+        let errorMessage = 'Failed to sign in with Google. Please try again.';
+        if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage = 'Sign-in cancelled. Please try again.';
+        } else if (error.code === 'auth/popup-blocked') {
+            errorMessage = 'Popup blocked. Please allow popups and try again.';
+        }
+        
+        alert(errorMessage);
+    }
+};
+
+// Email and Password Login
+window.handleEmailLogin = async (event) => {
+    console.log("hello")
+    event.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    if (!email || !password) {
+        alert('Please enter both email and password');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Sync with backend
+        await syncUserWithBackend(user);
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Email Sign-In Error:', error);
+        
+        let errorMessage = 'Failed to sign in. Please check your credentials.';
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = 'No account found with this email address.';
+        } else if (error.code === 'auth/wrong-password') {
+            errorMessage = 'Incorrect password. Please try again.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Please enter a valid email address.';
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = 'Too many failed attempts. Please try again later.';
+        }
+        
+        alert(errorMessage);
+    }
+};
+
+// Email Registration with Role
+window.registerWithEmailAndRole = async (email, password, userData) => {
+    try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Update user profile
+        await user.updateProfile({
+            displayName: `${userData.firstName} ${userData.lastName}`
+        });
+        
+        // Sync with Django backend including role and additional data
+        await syncUserWithBackend(user, userData.role, userData);
+        
+        // Redirect to dashboard
+        window.location.href = '/dashboard/';
+        
+    } catch (error) {
+        throw error; // Re-throw to be handled by the calling function
+    }
+};
+
+// Sync Firebase user with Django backend
+async function syncUserWithBackend(firebaseUser, role = null, additionalData = {}) {
+    try {
+        const idToken = await firebaseUser.getIdToken();
+        
+        const response = await fetch('/api/auth/firebase-login/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken(),
+            },
+            body: JSON.stringify({
+                id_token: idToken,
+                role: role,
+                additional_data: additionalData
+            })
+        });
+        console.log(response)
+        if (!response.ok) {
+            throw new Error('Failed to sync with backend');
+        }
+        
+        const data = await response.json();
+        return data;
+        
+    } catch (error) {
+        console.error('Backend sync error:', error);
+        throw error;
+    }
+}
+
+// Helper functions
+function showLoading() {
+    document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+}
+
+function hideLoading() {
+    document.getElementById('loading-spinner').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+function getCsrfToken() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfToken ? csrfToken.value : '';
+}
+
+// Authentication form toggles
+function showRegisterForm() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'block';
+}
+
+function showLoginForm() {
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+}
+
+function showLoading() {
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('register-form').style.display = 'none';
+    document.getElementById('loading-spinner').style.display = 'block';
+}
+
+function hideLoading() {
+    document.getElementById('loading-spinner').style.display = 'none';
+}
+
+// Handle role selection change
+document.addEventListener('DOMContentLoaded', function() {
+    const roleSelect = document.getElementById('register-role');
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            const role = this.value;
+            const companyField = document.getElementById('company-name-field');
+            const licenseField = document.getElementById('license-field');
+            const vehicleField = document.getElementById('vehicle-field');
+            
+            // Hide all role-specific fields first
+            companyField.style.display = 'none';
+            licenseField.style.display = 'none';
+            vehicleField.style.display = 'none';
+            
+            // Show relevant fields based on role
+            if (role === 'fleet_owner') {
+                companyField.style.display = 'block';
+            } else if (role === 'driver') {
+                licenseField.style.display = 'block';
+                vehicleField.style.display = 'block';
+            }
+        });
+    }
+});
+
+// Enhanced email registration with role-based validation
+window.handleEmailRegister = async (event) => {
+    event.preventDefault();
+    
+    const firstName = document.getElementById('register-first-name').value;
+    const lastName = document.getElementById('register-last-name').value;
+    const email = document.getElementById('register-email').value;
+    const role = document.getElementById('register-role').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    
+    // Get role-specific data
+    const companyName = document.getElementById('register-company-name').value;
+    const licenseNumber = document.getElementById('register-license').value;
+    const vehicleNumber = document.getElementById('register-vehicle').value;
+    
+    // Validation
+    if (!firstName || !lastName || !email || !role) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+    }
+    
+    if (password.length < 6) {
+        alert('Password must be at least 6 characters long');
+        return;
+    }
+    
+    // Role-specific validation
+    if (role === 'driver' && !licenseNumber) {
+        alert('License number is required for drivers');
+        return;
+    }
+    
+    showLoading();
+    
+    try {
+        // Prepare user data for backend
+        const userData = {
+            firstName,
+            lastName,
+            email,
+            role,
+            companyName: role === 'fleet_owner' ? companyName : null,
+            licenseNumber: role === 'driver' ? licenseNumber : null,
+            vehicleNumber: role === 'driver' ? vehicleNumber : null
+        };
+        
+        await registerWithEmailAndRole(email, password, userData);
+    } catch (error) {
+        hideLoading();
+        console.error('Registration error:', error);
+        
+        let errorMessage = 'Failed to create account. Please try again.';
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'An account with this email already exists.';
+        } else if (error.code === 'auth/weak-password') {
+            errorMessage = 'Password is too weak. Please choose a stronger password.';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'Please enter a valid email address.';
+        }
+        
+        alert(errorMessage);
+    }
+    
+};
+
+// function showLoading() {
+//     document.getElementById('login-form').style.display = 'none';
+//     document.getElementById('register-form').style.display = 'none';
+//     document.getElementById('loading-spinner').style.display = 'block';
+// }
+
+// function hideLoading() {
+//     document.getElementById('loading-spinner').style.display = 'none';
+//     showLoginForm();
+// }
+
+// Redirect to dashboard after successful authentication
+function redirectToDashboard() {
+    window.location.href = '/fleet/dashboard/';
+}
+
+// Override the showAuthenticatedContent function for this page
+window.showAuthenticatedContent = function() {
+    // Redirect to dashboard instead of showing content here
+    redirectToDashboard();
+};
+</script>
+{% endblock %}

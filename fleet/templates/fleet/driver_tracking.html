@@ -1,0 +1,495 @@
+{% extends 'fleet/base.html' %}
+{% csrf_token %}
+{% block title %}Real-Time Driver Tracking - DriveNowKM Flex{% endblock %}
+{% block content %}
+
+<!-- Real-Time Driver Tracking Dashboard -->
+<div class="tracking-header bg-white shadow-sm border-bottom mb-4">
+  <div class="container-fluid py-3">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1 class="h3 mb-1 text-dark fw-bold">
+          <i class="fas fa-map-marker-alt text-primary"></i>
+          Real-Time Driver Tracking
+        </h1>
+        <p class="text-muted mb-0">Monitor active drivers and vehicle locations in real-time</p>
+      </div>
+      <div class="col-auto">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-outline-primary btn-sm" onclick="refreshDriverLocations()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <div class="text-end">
+            <div class="small text-muted">Last Updated</div>
+            <div class="small text-success" id="last-update-time">{{ "now"|date:"g:i A" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Driver Status Overview -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-success" id="active-drivers-count">{{ active_drivers|default:8 }}</div>
+        <div class="text-muted">Active Drivers</div>
+        <div class="small text-success">
+          <i class="fas fa-arrow-up"></i> Online now
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-warning" id="en-route-count">{{ en_route_drivers|default:5 }}</div>
+        <div class="text-muted">En Route</div>
+        <div class="small text-warning">
+          <i class="fas fa-truck"></i> Delivering
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-info" id="idle-drivers-count">{{ idle_drivers|default:3 }}</div>
+        <div class="text-muted">Idle Drivers</div>
+        <div class="small text-info">
+          <i class="fas fa-pause"></i> Available
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-3 col-md-6 mb-3">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-secondary" id="offline-drivers-count">{{ offline_drivers|default:2 }}</div>
+        <div class="text-muted">Offline</div>
+        <div class="small text-secondary">
+          <i class="fas fa-power-off"></i> Not available
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map and Driver List Layout -->
+<div class="row">
+  <!-- Interactive Map -->
+  <div class="col-lg-8 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="fas fa-map text-primary"></i>
+            Live Fleet Map
+          </h6>
+          <div class="d-flex gap-2">
+            <span class="badge bg-success">
+              <i class="fas fa-circle"></i> Active
+            </span>
+            <span class="badge bg-warning">
+              <i class="fas fa-circle"></i> En Route
+            </span>
+            <span class="badge bg-info">
+              <i class="fas fa-circle"></i> Idle
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div id="fleet-map" style="height: 500px; position: relative;">
+          <!-- Map will be rendered here -->
+          <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+            <div class="text-center">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Loading map...</span>
+              </div>
+              <div class="text-muted">Loading fleet map...</div>
+              <div class="small text-muted mt-2">Initializing Ola Maps integration</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Driver Details Panel -->
+  <div class="col-lg-4 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white border-bottom">
+        <h6 class="mb-0">
+          <i class="fas fa-users text-primary"></i>
+          Active Drivers
+        </h6>
+      </div>
+      <div class="card-body p-0">
+        <div class="driver-list" style="max-height: 500px; overflow-y: auto;">
+          <div id="drivers-loading" class="text-center py-4">
+            <div class="spinner-border spinner-border-sm text-primary" role="status">
+              <span class="visually-hidden">Loading drivers...</span>
+            </div>
+            <div class="small text-muted mt-2">Loading driver data...</div>
+          </div>
+          
+          <div id="drivers-list" style="display: none;">
+            <!-- Driver entries will be populated here -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Trip Progress Tracking -->
+<div class="row">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="fas fa-route text-primary"></i>
+            Active Trip Progress
+          </h6>
+          <button class="btn btn-outline-primary btn-sm" onclick="refreshTripProgress()">
+            <i class="fas fa-sync-alt"></i> Refresh Progress
+          </button>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Trip ID</th>
+                <th>Driver</th>
+                <th>Route</th>
+                <th>Progress</th>
+                <th>ETA</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="active-trips-table">
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading trips...</span>
+                  </div>
+                  <div class="small text-muted mt-2">Loading active trips...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.tracking-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.tracking-header h1,
+.tracking-header p {
+  color: white;
+}
+
+.driver-entry {
+  border-bottom: 1px solid #f8f9fa;
+  padding: 15px;
+  transition: background-color 0.2s;
+}
+
+.driver-entry:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.driver-entry:last-child {
+  border-bottom: none;
+}
+
+.driver-status {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.status-active { background-color: #28a745; }
+.status-en-route { background-color: #ffc107; }
+.status-idle { background-color: #17a2b8; }
+.status-offline { background-color: #6c757d; }
+
+.progress-bar-custom {
+  height: 8px;
+  border-radius: 4px;
+  background-color: #e9ecef;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.trip-progress-success { background-color: #28a745; }
+.trip-progress-warning { background-color: #ffc107; }
+.trip-progress-info { background-color: #17a2b8; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  loadDriverTrackingData();
+  
+  // Set up auto-refresh every 30 seconds for real-time tracking
+  setInterval(function() {
+    refreshDriverLocations();
+    refreshTripProgress();
+  }, 30000);
+});
+
+async function loadDriverTrackingData() {
+  try {
+    // Load driver locations and status
+    const response = await fetch('/fleet/api/driver-tracking/', {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateDriverCounts(data.driver_counts);
+      updateDriversList(data.drivers);
+      updateActiveTripsTable(data.active_trips);
+      initializeFleetMap(data.drivers);
+    }
+  } catch (error) {
+    console.error('Error loading driver tracking data:', error);
+    showTrackingError();
+  }
+}
+
+function updateDriverCounts(counts) {
+  document.getElementById('active-drivers-count').textContent = counts.active || 0;
+  document.getElementById('en-route-count').textContent = counts.en_route || 0;
+  document.getElementById('idle-drivers-count').textContent = counts.idle || 0;
+  document.getElementById('offline-drivers-count').textContent = counts.offline || 0;
+}
+
+function updateDriversList(drivers) {
+  const driversLoading = document.getElementById('drivers-loading');
+  const driversList = document.getElementById('drivers-list');
+  
+  driversLoading.style.display = 'none';
+  driversList.style.display = 'block';
+  
+  driversList.innerHTML = drivers.map(driver => `
+    <div class="driver-entry" onclick="focusOnDriver(${driver.id})">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <div class="d-flex align-items-center mb-2">
+            <span class="driver-status status-${driver.status}"></span>
+            <strong>${driver.name}</strong>
+          </div>
+          <div class="small text-muted">
+            <i class="fas fa-truck"></i> ${driver.vehicle_number || 'No vehicle assigned'}
+          </div>
+          <div class="small text-muted">
+            <i class="fas fa-phone"></i> ${driver.phone || 'No phone'}
+          </div>
+        </div>
+        <div class="text-end">
+          <div class="badge bg-${getStatusColor(driver.status)} mb-1">
+            ${driver.status.charAt(0).toUpperCase() + driver.status.slice(1)}
+          </div>
+          <div class="small text-muted">
+            ${driver.last_seen || 'Unknown'}
+          </div>
+        </div>
+      </div>
+      ${driver.current_trip ? `
+        <div class="mt-2 p-2 bg-light rounded">
+          <div class="small"><strong>Current Trip:</strong></div>
+          <div class="small text-muted">${driver.current_trip.origin} → ${driver.current_trip.destination}</div>
+          <div class="progress-bar-custom mt-1">
+            <div class="progress-fill trip-progress-${getProgressColor(driver.current_trip.progress)}" 
+                 style="width: ${driver.current_trip.progress}%"></div>
+          </div>
+          <div class="small text-muted mt-1">${driver.current_trip.progress}% complete</div>
+        </div>
+      ` : ''}
+    </div>
+  `).join('');
+}
+
+function updateActiveTripsTable(trips) {
+  const tbody = document.getElementById('active-trips-table');
+  
+  if (trips.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="text-center py-4 text-muted">
+          No active trips found
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  tbody.innerHTML = trips.map(trip => `
+    <tr>
+      <td><strong>#${trip.id}</strong></td>
+      <td>
+        <div class="d-flex align-items-center">
+          <span class="driver-status status-${trip.driver_status}"></span>
+          ${trip.driver_name}
+        </div>
+      </td>
+      <td>
+        <div class="small">
+          <strong>From:</strong> ${trip.origin}<br>
+          <strong>To:</strong> ${trip.destination}
+        </div>
+      </td>
+      <td>
+        <div class="progress-bar-custom">
+          <div class="progress-fill trip-progress-${getProgressColor(trip.progress)}" 
+               style="width: ${trip.progress}%"></div>
+        </div>
+        <div class="small text-muted mt-1">${trip.progress}% complete</div>
+      </td>
+      <td>
+        <div class="small">
+          <strong>${trip.eta}</strong><br>
+          <span class="text-muted">${trip.remaining_time}</span>
+        </div>
+      </td>
+      <td>
+        <span class="badge bg-${getStatusColor(trip.status)}">
+          ${trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+        </span>
+      </td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm btn-outline-primary" onclick="trackTrip(${trip.id})" title="Track">
+            <i class="fas fa-map-marker-alt"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-info" onclick="contactDriver(${trip.driver_id})" title="Contact">
+            <i class="fas fa-phone"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function initializeFleetMap(drivers) {
+  // Initialize map with driver locations
+  const mapContainer = document.getElementById('fleet-map');
+  
+  // For now, show a placeholder with driver count
+  mapContainer.innerHTML = `
+    <div class="d-flex align-items-center justify-content-center h-100 bg-light">
+      <div class="text-center">
+        <i class="fas fa-map-marked-alt fa-3x text-primary mb-3"></i>
+        <h5>Fleet Map</h5>
+        <p class="text-muted">Tracking ${drivers.length} drivers</p>
+        <div class="small text-muted">
+          Integration with Ola Maps API ready<br>
+          Real-time location updates available
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getStatusColor(status) {
+  const colorMap = {
+    'active': 'success',
+    'en_route': 'warning',
+    'idle': 'info',
+    'offline': 'secondary'
+  };
+  return colorMap[status] || 'secondary';
+}
+
+function getProgressColor(progress) {
+  if (progress >= 80) return 'success';
+  if (progress >= 50) return 'info';
+  return 'warning';
+}
+
+async function refreshDriverLocations() {
+  const lastUpdateTime = document.getElementById('last-update-time');
+  lastUpdateTime.textContent = new Date().toLocaleTimeString();
+  
+  // Reload driver tracking data
+  await loadDriverTrackingData();
+}
+
+async function refreshTripProgress() {
+  // Refresh only the trip progress data
+  try {
+    const response = await fetch('/fleet/api/trip-progress/', {
+      method: 'GET',
+      headers: {
+        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateActiveTripsTable(data.trips);
+    }
+  } catch (error) {
+    console.error('Error refreshing trip progress:', error);
+  }
+}
+
+function focusOnDriver(driverId) {
+  console.log('Focusing on driver:', driverId);
+  // Implementation for focusing map on specific driver
+}
+
+function trackTrip(tripId) {
+  console.log('Tracking trip:', tripId);
+  // Implementation for tracking specific trip
+}
+
+function contactDriver(driverId) {
+  console.log('Contacting driver:', driverId);
+  // Implementation for contacting driver
+}
+
+function showTrackingError() {
+  const driversLoading = document.getElementById('drivers-loading');
+  driversLoading.innerHTML = `
+    <div class="text-center py-4">
+      <i class="fas fa-exclamation-triangle text-warning fa-2x mb-2"></i>
+      <div class="text-muted">Unable to load tracking data</div>
+      <button class="btn btn-sm btn-primary mt-2" onclick="loadDriverTrackingData()">
+        Retry
+      </button>
+    </div>
+  `;
+}
+</script>
+
+{% endblock %}

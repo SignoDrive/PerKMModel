@@ -1,0 +1,90 @@
+tp = frappe.form_dict.truck_type
+driver_type = frappe.form_dict.driver_type.lower()
+truck = frappe.get_doc("Per Km Cost", tp)
+
+origin = frappe.form_dict.origin
+destination = frappe.form_dict.destination
+
+frappe.response["origin"] = origin
+frappe.response["destination"] = destination
+
+api_key = "cBJNdoZyy0BVu0YAvoyGaoobymNvHlHJwMNS6F7h"
+
+origin_url = f"https://api.olamaps.io/places/v1/geocode?address={origin}&language=en&api_key={api_key}"
+origin_response = frappe.make_get_request(origin_url)
+
+origin_lat = origin_response["geocodingResults"][0]["geometry"]["location"]["lat"]
+origin_lng = origin_response["geocodingResults"][0]["geometry"]["location"]["lng"]
+
+destination_url = f"https://api.olamaps.io/places/v1/geocode?address={destination}&language=en&api_key={api_key}"
+destination_response = frappe.make_get_request(destination_url)
+
+destination_lat = destination_response["geocodingResults"][0]["geometry"]["location"]["lat"]
+destination_lng = destination_response["geocodingResults"][0]["geometry"]["location"]["lng"]
+
+distance_url = f"https://api.olamaps.io/routing/v1/distanceMatrix/basic?origins={origin_lat},{origin_lng}&destinations={destination_lat},{destination_lng}&api_key={api_key}"
+distance_response = frappe.make_get_request(distance_url)
+
+distance_meters = distance_response["rows"][0]["elements"][0]["distance"]
+distance_km = int(round((distance_meters / 1000.0) + 50, 0))
+
+
+frappe.response["origin"]  = {
+    "lat": origin_lat,
+    "lng": origin_lng
+}
+frappe.response["destination"]  = {
+    "lat": destination_lat,
+    "lng": destination_lng
+}
+
+frappe.response["distance"] = round(distance_km, 0)
+
+# distance_km = 2000
+frappe.response["distance"] = distance_km
+
+if driver_type.lower() == "single":
+    truck.monthly_running_kms_for_single_driver = distance_km
+elif driver_type.lower() == "double":
+    truck.monthly_running_kms_for_double_driver = distance_km
+    
+truck.save()
+# frappe.db.commit()
+
+avg = truck.get("avg")
+diesel_cost = round(truck.get("diesel_cost"),2)
+fuel_cost = round(truck.get("fuel_cost"),2)
+single_driver_cost = round(truck.get("single_driver_cost"),2)
+double_driver_cost = round(truck.get("double_driver_cost"),2)
+en_route_expenses = round(truck.get("en_route_expenses"),2)
+per_km_cost_single_driver = round(truck.get("per_km_cost_single_driver"),2)
+per_km_cost_double_driver = round(truck.get("per_km_cost_double_driver"),2)
+total_cost_single = f"₹{round(distance_km * per_km_cost_single_driver, 2)}"
+total_cost_double = f"₹{round(distance_km * per_km_cost_double_driver, 2)}"
+
+frappe.response["total_cost_double"]= total_cost_double
+if driver_type == "single":
+    frappe.response["data"]  = {
+        "Truck Type":tp,
+        "Distance ":distance_km,
+        "Average":avg,
+        "Diesel Cost":diesel_cost,
+        "Diesel Cost per km": fuel_cost,
+        "Single driver cost":single_driver_cost,
+        "Enroute expenses":en_route_expenses,
+        "Per km cost":per_km_cost_single_driver,
+        "Total cost": total_cost_single
+    }
+    
+elif driver_type =="double":
+    frappe.response["data"]  = {
+        "Truck Type":tp,
+        "Distance":distance_km,
+        "Average":avg,
+        "Diesel Cost":diesel_cost,
+        "Diesel Cost per km": fuel_cost,
+        "Double Driver Cost":double_driver_cost,
+        "Enroute Expenses":en_route_expenses,
+        "Per km cost":per_km_cost_double_driver,
+        "Total cost": total_cost_double
+    }

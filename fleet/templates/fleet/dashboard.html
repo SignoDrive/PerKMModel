@@ -1,0 +1,2198 @@
+{% extends 'fleet/base.html' %} {% csrf_token %} {% block title %}Dashboard -
+DriveNowKM Flex{% endblock %} {% block content %}
+
+<!-- Dashboard Header -->
+<div class="dashboard-header bg-white shadow-sm border-bottom mb-4">
+  <div class="container-fluid py-3">
+    <div class="row align-items-center">
+      <div class="col">
+        <h1 class="h3 mb-1 text-dark fw-bold">Fleet Management Dashboard</h1>
+        <p class="text-muted mb-0">
+          Monitor your fleet operations and performance metrics
+        </p>
+      </div>
+      <div class="col-auto">
+        <div class="d-flex align-items-center gap-3">
+          <div class="text-end">
+            <div class="small text-muted">{{ "now"|date:"F j, Y" }}</div>
+            <div class="small text-muted">{{ "now"|date:"g:i A" }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Metrics Cards -->
+<div class="row mb-4">
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-primary" id="total-vehicles">15</div>
+        <div class="text-muted">Total Vehicles</div>
+        <div class="small text-success mt-1">
+          <i class="fas fa-arrow-up"></i> Active Fleet
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-success" id="active-trips">3</div>
+        <div class="text-muted">Active Trips</div>
+        <div class="small text-info mt-1">
+          <i class="fas fa-truck"></i> In Progress
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-warning" id="fleet-utilization">33%</div>
+        <div class="text-muted">Fleet Utilization</div>
+        <div class="small text-warning mt-1">
+          <i class="fas fa-chart-line"></i> Efficiency Rate
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-3 col-md-6 mb-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body text-center">
+        <div class="h2 mb-2 text-info" id="total-revenue">₹0</div>
+        <div class="text-muted">Total Revenue</div>
+        <div class="small text-muted mt-1">
+          <i class="fas fa-rupee-sign"></i> This Month
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Dashboard Tabs -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white border-bottom">
+    <ul class="nav nav-tabs nav-tabs-custom" id="dashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link active"
+          id="overview-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#overview"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-tachometer-alt"></i> Overview
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="calculator-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#calculator"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-calculator"></i> Price Calculator
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="trips-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#trips"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-route"></i> Trip Management
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="fleet-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#fleet"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-truck"></i> Fleet Management
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button
+          class="nav-link"
+          id="analytics-tab"
+          data-bs-toggle="tab"
+          data-bs-target="#analytics"
+          type="button"
+          role="tab"
+        >
+          <i class="fas fa-chart-bar"></i> Analytics
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div class="card-body">
+    <div class="tab-content" id="dashboardTabsContent">
+      <!-- Overview Tab -->
+      <div class="tab-pane fade show active" id="overview" role="tabpanel">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Fleet Status</h6>
+              </div>
+              <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Active Vehicles:</span>
+                  <span class="text-success" id="overview-active">5</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Idle Vehicles:</span>
+                  <span class="text-warning" id="overview-idle">6</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span>Maintenance:</span>
+                  <span class="text-danger" id="overview-maintenance">4</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Trip Overview</h6>
+              </div>
+              <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Active Trips:</span>
+                  <span class="text-success" id="overview-active-trips">3</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <span>Completed:</span>
+                  <span class="text-info" id="overview-completed-trips">5</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span>Pending:</span>
+                  <span class="text-warning" id="overview-pending-trips"
+                    >11</span
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Recent Activity</h6>
+              </div>
+              <div class="card-body">
+                <div class="activity-list" id="recent-activity">
+                  <div class="activity-item d-flex align-items-center mb-3">
+                    <div
+                      class="activity-icon bg-success rounded-circle p-2 me-3"
+                    >
+                      <i class="fas fa-truck text-white small"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold">New trip created</div>
+                      <div class="small text-muted">
+                        Mumbai to Pune - ₹3,986
+                      </div>
+                    </div>
+                    <div class="ms-auto small text-muted">2 hours ago</div>
+                  </div>
+
+                  <div class="activity-item d-flex align-items-center mb-3">
+                    <div class="activity-icon bg-info rounded-circle p-2 me-3">
+                      <i class="fas fa-check text-white small"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold">Trip completed</div>
+                      <div class="small text-muted">Delhi to Agra - ₹3,399</div>
+                    </div>
+                    <div class="ms-auto small text-muted">4 hours ago</div>
+                  </div>
+
+                  <div class="activity-item d-flex align-items-center">
+                    <div
+                      class="activity-icon bg-warning rounded-circle p-2 me-3"
+                    >
+                      <i class="fas fa-wrench text-white small"></i>
+                    </div>
+                    <div>
+                      <div class="fw-bold">Vehicle maintenance</div>
+                      <div class="small text-muted">
+                        MH-14-CD-5678 scheduled
+                      </div>
+                    </div>
+                    <div class="ms-auto small text-muted">6 hours ago</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fleet Management Tab -->
+      <div class="tab-pane fade" id="fleet" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">Vehicle Fleet</h6>
+          <button class="btn btn-primary btn-sm" onclick="refreshFleetData()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Vehicle Number</th>
+                <th>Model</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                <th>Location</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicles-table-body">
+              <tr>
+                <td colspan="6" class="text-center py-4">
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  >
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <div class="small text-muted mt-2">Loading vehicles...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Trip Management Tab -->
+      <div class="tab-pane fade" id="trips" role="tabpanel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="mb-0">Trip Management</h6>
+          <button class="btn btn-primary btn-sm" onclick="refreshTripsData()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Trip ID</th>
+                <th>Route</th>
+                <th>Distance</th>
+                <th>Cost</th>
+                <th>Status</th>
+                <th>Driver</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="trips-table-body">
+              <tr>
+                <td colspan="7" class="text-center py-4">
+                  <div
+                    class="spinner-border spinner-border-sm text-primary"
+                    role="status"
+                  >
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                  <div class="small text-muted mt-2">Loading trips...</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Analytics Tab -->
+      <div class="tab-pane fade" id="analytics" role="tabpanel">
+        <div class="row">
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Fleet Status Distribution</h6>
+              </div>
+              <div class="card-body">
+                <div id="fleet-status-chart" style="height: 300px">
+                  <div class="text-center p-4">
+                    <div class="row">
+                      <div class="col-4">
+                        <div class="analytics-metric">
+                          <div class="h3 text-success" id="chart-active">5</div>
+                          <div class="small text-muted">Active</div>
+                          <div class="progress mt-2" style="height: 8px">
+                            <div
+                              class="progress-bar bg-success"
+                              style="width: 33%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="analytics-metric">
+                          <div class="h3 text-warning" id="chart-idle">6</div>
+                          <div class="small text-muted">Idle</div>
+                          <div class="progress mt-2" style="height: 8px">
+                            <div
+                              class="progress-bar bg-warning"
+                              style="width: 40%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-4">
+                        <div class="analytics-metric">
+                          <div class="h3 text-danger" id="chart-maintenance">
+                            4
+                          </div>
+                          <div class="small text-muted">Maintenance</div>
+                          <div class="progress mt-2" style="height: 8px">
+                            <div
+                              class="progress-bar bg-danger"
+                              style="width: 27%"
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Trip Status Overview</h6>
+              </div>
+              <div class="card-body">
+                <div id="trip-status-chart" style="height: 300px">
+                  <div class="trip-analytics p-3">
+                    <div class="mb-3">
+                      <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span class="fw-medium">Completed Trips</span>
+                        <span class="badge bg-success" id="chart-completed"
+                          >5</span
+                        >
+                      </div>
+                      <div class="progress" style="height: 12px">
+                        <div
+                          class="progress-bar bg-success"
+                          style="width: 26%"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span class="fw-medium">Active Trips</span>
+                        <span class="badge bg-info" id="chart-active-trips"
+                          >3</span
+                        >
+                      </div>
+                      <div class="progress" style="height: 12px">
+                        <div
+                          class="progress-bar bg-info"
+                          style="width: 16%"
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div class="mb-3">
+                      <div
+                        class="d-flex justify-content-between align-items-center mb-2"
+                      >
+                        <span class="fw-medium">Pending Trips</span>
+                        <span class="badge bg-warning" id="chart-pending"
+                          >11</span
+                        >
+                      </div>
+                      <div class="progress" style="height: 12px">
+                        <div
+                          class="progress-bar bg-warning"
+                          style="width: 58%"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-12">
+            <div class="card">
+              <div class="card-header">
+                <h6 class="mb-0">Performance Metrics</h6>
+              </div>
+              <div class="card-body">
+                <div class="row text-center">
+                  <div class="col-md-3">
+                    <div class="metric-box">
+                      <div class="h4 text-primary" id="avg-trip-distance">
+                        245 km
+                      </div>
+                      <div class="small text-muted">Avg Trip Distance</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="metric-box">
+                      <div class="h4 text-success" id="on-time-delivery">
+                        87%
+                      </div>
+                      <div class="small text-muted">On-Time Delivery</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="metric-box">
+                      <div class="h4 text-warning" id="fuel-efficiency">
+                        12.5 km/l
+                      </div>
+                      <div class="small text-muted">Avg Fuel Efficiency</div>
+                    </div>
+                  </div>
+                  <div class="col-md-3">
+                    <div class="metric-box">
+                      <div class="h4 text-info" id="customer-rating">4.2/5</div>
+                      <div class="small text-muted">Customer Rating</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+<!-- Price Calculator Tab -->
+<div class="tab-pane fade" id="calculator" role="tabpanel">
+  <div class="container-fluid">
+    <div class="row">
+
+      <!-- Left Panel: Form + Route Info -->
+      <div class="col-lg-6">
+        <!-- Main Calculator Form -->
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header text-dark" style="background-color: #ffd700;">
+            <h5 class="mb-0">
+              <i class="fas fa-calculator me-2"></i>Dynamic Trip Price Calculator
+            </h5>
+          </div>
+          <div class="card-body">
+            <form id="price-calculator-form" class="needs-validation" novalidate>
+
+              <!-- Locations -->
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-map-marker-alt text-success me-1"></i>Pickup Location
+                  </label>
+                  <div class="autocomplete-container position-relative">
+                    <input type="text" class="form-control form-control-lg autocomplete-input" id="origin" placeholder="Type pickup city..." required autocomplete="off"/>
+                    <i class="fas fa-chevron-down autocomplete-arrow"></i>
+                    <div class="autocomplete-dropdown" id="origin-dropdown"><div class="autocomplete-list" id="origin-list"></div></div>
+                  </div>
+                  <div class="invalid-feedback">Please select pickup location</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="form-label fw-semibold">
+                    <i class="fas fa-flag-checkered text-danger me-1"></i>Drop Location
+                  </label>
+                  <div class="autocomplete-container position-relative">
+                    <input type="text" class="form-control form-control-lg autocomplete-input" id="destination" placeholder="Type destination city..." required autocomplete="off"/>
+                    <i class="fas fa-chevron-down autocomplete-arrow"></i>
+                    <div class="autocomplete-dropdown" id="destination-dropdown"><div class="autocomplete-list" id="destination-list"></div></div>
+                  </div>
+                  <div class="invalid-feedback">Please select destination</div>
+                </div>
+              </div>
+
+              <!-- Truck & Driver Config -->
+              <div class="row mb-4">
+                      <div class="col-md-4">
+                        <label for="truck-type" class="form-label fw-semibold">
+                          <i class="fas fa-truck text-primary me-1"></i>Truck
+                          Type
+                        </label>
+                        <select
+                          class="form-select form-select-lg"
+                          id="truck-type"
+                          required
+                        >
+                          <option value="">Select Truck Type</option>
+                          <optgroup label="Light Commercial Vehicles">
+                            <option
+                              value="6 Tyre trucks OPEN"
+                              data-gw="13000"
+                              data-net-weight="7000"
+                              data-kmpl="6.00"
+                              data-salary="40000"
+                              data-distance="7000"
+                            >
+                              6 Tyre trucks OPEN
+                            </option>
+                            <option
+                              value="6 Tyre trucks CLOSED"
+                              data-gw="13000"
+                              data-net-weight="7000"
+                              data-kmpl="6.00"
+                              data-salary="40000"
+                              data-distance="7000"
+                            >
+                              6 Tyre trucks CLOSED
+                            </option>
+                            <option
+                              value="6 Tyre trucks OPEN (10T)"
+                              data-gw="16000"
+                              data-net-weight="10000"
+                              data-kmpl="5.50"
+                              data-salary="40000"
+                              data-distance="6000"
+                            >
+                              6 Tyre trucks OPEN (10T)
+                            </option>
+                            <option
+                              value="6 Tyre trucks CLOSED (10T)"
+                              data-gw="16000"
+                              data-net-weight="10000"
+                              data-kmpl="5.50"
+                              data-salary="40000"
+                              data-distance="7000"
+                            >
+                              6 Tyre trucks CLOSED (10T)
+                            </option>
+                          </optgroup>
+                          <optgroup label="Medium Commercial Vehicles">
+                            <option
+                              value="10 tyres Multi axle Truck OPEN"
+                              data-gw="25000"
+                              data-net-weight="18000"
+                              data-kmpl="4.50"
+                              data-salary="40000"
+                              data-distance="6500"
+                            >
+                              10 tyres Multi axle Truck OPEN
+                            </option>
+                            <option
+                              value="10 tyres Multi axle Truck CLOSED"
+                              data-gw="25000"
+                              data-net-weight="18000"
+                              data-kmpl="4.50"
+                              data-salary="40000"
+                              data-distance="6500"
+                            >
+                              10 tyres Multi axle Truck CLOSED
+                            </option>
+                          </optgroup>
+                          <optgroup label="Heavy Commercial Vehicles">
+                            <option
+                              value="12 Tyre Single Chassis truck Rigid OPEN"
+                              data-gw="31000"
+                              data-net-weight="25000"
+                              data-kmpl="4.00"
+                              data-salary="40000"
+                              data-distance="7000"
+                            >
+                              12 Tyre Single Chassis truck Rigid OPEN
+                            </option>
+                            <option
+                              value="14 Tyre Single Chassis truck Rigid OPEN"
+                              data-gw="37000"
+                              data-net-weight="30000"
+                              data-kmpl="3.50"
+                              data-salary="40000"
+                              data-distance="6500"
+                            >
+                              14 Tyre Single Chassis truck Rigid OPEN
+                            </option>
+                            <option
+                              value="14 Tyre Trailer FLAT BED"
+                              data-gw="29000"
+                              data-net-weight="22000"
+                              data-kmpl="4.00"
+                              data-salary="50000"
+                              data-distance="6000"
+                            >
+                              14 Tyre Trailer FLAT BED
+                            </option>
+                            <option
+                              value="14 Tyre Trailer CONTAINER"
+                              data-gw="29000"
+                              data-net-weight="22000"
+                              data-kmpl="4.00"
+                              data-salary="50000"
+                              data-distance="6000"
+                            >
+                              14 Tyre Trailer CONTAINER
+                            </option>
+                            <option
+                              value="16 Tyre Trailer FLAT BED"
+                              data-gw="35000"
+                              data-net-weight="27000"
+                              data-kmpl="3.75"
+                              data-salary="50000"
+                              data-distance="6000"
+                            >
+                              16 Tyre Trailer FLAT BED
+                            </option>
+                            <option
+                              value="16 Tyre Trailer CONTAINER"
+                              data-gw="35000"
+                              data-net-weight="27000"
+                              data-kmpl="3.75"
+                              data-salary="50000"
+                              data-distance="6000"
+                            >
+                              16 Tyre Trailer CONTAINER
+                            </option>
+                            <option
+                              value="18 Tyre Trailer"
+                              data-gw="40200"
+                              data-net-weight="35000"
+                              data-kmpl="2.50"
+                              data-salary="50000"
+                              data-distance="4500"
+                            >
+                              18 Tyre Trailer
+                            </option>
+                            <option
+                              value="22 Tyre Trailer"
+                              data-gw="49000"
+                              data-net-weight="40000"
+                              data-kmpl="2.25"
+                              data-salary="50000"
+                              data-distance="4500"
+                            >
+                              22 Tyre Trailer
+                            </option>
+                          </optgroup>
+                        </select>
+                        <div class="invalid-feedback">
+                          Please select truck type
+                        </div>
+                      </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold"><i class="fas fa-hashtag text-warning me-1"></i>No. of Trucks</label>
+                  <input type="number" class="form-control form-control-lg" id="truck-quantity" min="1" max="1000" placeholder="Enter truck count" required onchange="updateServiceChargeRate()"/>
+                  <div class="form-text"><small id="service-rate-info"><i class="fas fa-percent me-1"></i>Service charge varies by quantity</small></div>
+                  <div class="invalid-feedback">Please enter truck quantity</div>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label fw-semibold"><i class="fas fa-user text-info me-1"></i>Driver</label>
+                  <select class="form-select form-select-lg" id="driver-type" required>
+                    <option value="single">Single Driver</option>
+                    <option value="double">Double Driver</option>
+                  </select>
+                  <div class="form-text"><small><i class="fas fa-info-circle me-1"></i>Double driver for long distances</small></div>
+                </div>
+              </div>
+
+              <!-- Buttons -->
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="button" class="btn btn-outline-secondary btn-lg me-md-2" onclick="clearCalculator()">
+                  <i class="fas fa-eraser me-1"></i>Clear
+                </button>
+                <button type="submit" class="btn btn-primary btn-lg px-4">
+                  <i class="fas fa-calculator me-1"></i>Calculate Price
+                  <span class="spinner-border spinner-border-sm ms-2 d-none" id="calc-spinner"></span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- Route Info -->
+        <div class="card shadow-sm border-0" id="route-info-card" style="display:none;">
+          <div class="card-header bg-light"><h6 class="mb-0"><i class="fas fa-route text-primary me-2"></i>Route Information</h6></div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="d-flex mb-2"><i class="fas fa-road text-muted me-2"></i><span class="fw-semibold">Total Distance:</span><span class="ms-auto" id="route-distance">-</span></div>
+                <div class="d-flex mb-2"><i class="fas fa-clock text-muted me-2"></i><span class="fw-semibold">Duration:</span><span class="ms-auto" id="route-duration">-</span></div>
+              </div>
+              <div class="col-md-6">
+                <div class="d-flex mb-2"><i class="fas fa-gas-pump text-muted me-2"></i><span class="fw-semibold">Fuel Stops:</span><span class="ms-auto" id="fuel-stops">-</span></div>
+                <div class="d-flex mb-2"><i class="fas fa-toll text-muted me-2"></i><span class="fw-semibold">Toll Gates:</span><span class="ms-auto" id="toll-gates">-</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Panel: Price Breakdown -->
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-success text-white">
+            <h6 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Price Breakdown</h6>
+          </div>
+          <div class="card-body">
+            <div id="price-result" style="display: none">
+              <!-- Distance -->
+              <div class="mb-3 d-flex justify-content-between align-items-center">
+                <span class="text-muted"><i class="fas fa-road me-1"></i>Distance</span>
+                <span class="fw-semibold" id="calc-distance">-</span>
+              </div>
+
+              <!-- Transportation Costs -->
+              <h6 class="text-muted fw-bold"><i class="fas fa-layer-group me-1"></i> Transportation Costs</h6>
+
+              <div class="ps-3 d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="fas fa-gas-pump me-1"></i>Fuel (₹<span id="fuel-rate">0</span>/km)</span>
+                <span>₹<span id="calc-fuel-single">0</span> (per truck)</span>
+              </div>
+
+              <div class="ps-3 d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="fas fa-user me-1"></i>Driver (₹<span id="driver-rate">0</span>/km)</span>
+                <span>₹<span id="calc-driver-single">0</span> (per truck)</span>
+              </div>
+
+              <div class="ps-3 d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="fas fa-tools me-1"></i>En-route (₹<span id="enroute-rate">0</span>/km)</span>
+                <span>₹<span id="calc-maintenance-single">0</span> (per truck)</span>
+              </div>
+
+              <div class="pt-2 border-top d-flex justify-content-between fw-bold">
+                <span class="text-dark"><i class="fas fa-equals me-1"></i>Base Cost:</span>
+                <span>₹<span id="calc-base-cost-single">0</span> (per truck)</span>
+              </div>
+
+              <!-- Service Charges -->
+              <h6 class="text-muted fw-bold mt-4"><i class="fas fa-cog me-1"></i> Service & Operations</h6>
+              <div class="ps-3 d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="fas fa-percentage me-1"></i>Service Charge (<span id="service-rate">0</span>%)</span>
+                <span>₹<span id="calc-service-single">0</span> (per truck)</span>
+              </div>
+
+              <!-- Summary -->
+              <div class="pt-2 border-top d-flex justify-content-between mb-2">
+                <span class="text-muted"><i class="fas fa-calculator me-1"></i>Per KM Rate</span>
+                <span>₹<span id="calc-gst">0</span></span>
+              </div>
+
+              <div class="pt-3 border-top d-flex justify-content-between align-items-center mb-4">
+                <span class="h6 mb-0 text-dark"><i class="fas fa-calculator me-1"></i>Total Cost</span>
+                <span class="h5 mb-0 text-success fw-bold">₹<span id="calc-total">0</span></span>
+              </div>
+
+              <div id="bulk-total-row" class="pt-3 border-top d-flex justify-content-between align-items-center mb-4" style="display: none;">
+                <span class="h6 mb-0 text-dark">
+                  <i class="fas fa-truck-moving me-1"></i>Total Bulk Cost
+                </span>
+                <span class="h5 mb-0 text-success fw-bold">
+                  ₹<span id="calc-total-multi">0</span>
+                </span>
+              </div>
+
+              <!-- Pricing Explanation -->
+              <div class="alert alert-light border mt-4 py-2">
+                <h6 class="mb-2 text-primary"><i class="fas fa-info-circle me-1"></i>How We Calculate Your Price</h6>
+                <small class="text-muted">
+                  <strong>Step 1:</strong> Actual costs (fuel, driver, en-route)<br/>
+                  <strong>Step 2:</strong> Service charge for support & insurance<br/>
+                  <strong>Step 3:</strong> Bulk discounts: 5+ (18%), 10+ (15%), 20+ (13%)
+                </small>
+              </div>
+
+              <!-- Validity -->
+              <div class="alert alert-info py-2">
+                <small><i class="fas fa-clock me-1"></i>Price valid for <span class="fw-semibold">24 hours</span></small>
+              </div>
+
+              <!-- Payment -->
+              <div class="d-grid gap-2 mt-3">
+                <button type="button" class="btn btn-success btn-lg" onclick="proceedToPayment()">
+                  <i class="fas fa-credit-card me-2"></i>Proceed to Payment
+                </button>
+              </div>
+            </div>
+
+            <!-- Placeholder -->
+            <div id="price-placeholder" class="text-center py-5">
+              <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+              <p class="text-muted mb-0">Enter trip details above</p>
+              <p class="text-muted">to get instant pricing</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Recent Calculations Section -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-history me-2"></i>Recent Calculations</h6>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th><i class="fas fa-route me-1"></i>Route</th>
+                    <th><i class="fas fa-road me-1"></i>Distance</th>
+                    <th><i class="fas fa-truck me-1"></i>Vehicle</th>
+                    <th><i class="fas fa-rupee-sign me-1"></i>Cost</th>
+                    <th><i class="fas fa-clock me-1"></i>Calculated</th>
+                    <th><i class="fas fa-cog me-1"></i>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-calculations">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="fas fa-calculator fa-2x mb-2 d-block"></i>
+                      No recent calculations available
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<style>
+  .nav-tabs-custom {
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .nav-tabs-custom .nav-link {
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #6c757d;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .nav-tabs-custom .nav-link:hover {
+    color: #495057;
+    border-bottom-color: #e9ecef;
+  }
+
+  .nav-tabs-custom .nav-link.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    background: none;
+  }
+
+  .activity-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .metric-box {
+    padding: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+  }
+
+  .table th {
+    border-top: none;
+    font-weight: 600;
+  }
+
+  .btn-group-sm > .btn,
+  .btn-sm {
+    font-size: 0.875rem;
+  }
+
+  /* Autocomplete Dropdown Styling */
+  .autocomplete-container {
+    position: relative;
+  }
+
+  .autocomplete-input {
+    padding-right: 40px !important;
+  }
+
+  .autocomplete-arrow {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+  }
+
+  .autocomplete-container.open .autocomplete-arrow {
+    transform: translateY(-50%) rotate(180deg);
+  }
+
+  .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1050;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    display: none;
+  }
+
+  .autocomplete-dropdown.show {
+    display: block;
+  }
+
+  .autocomplete-list {
+    padding: 0;
+    margin: 0;
+  }
+
+  .autocomplete-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.15s ease;
+  }
+
+  .autocomplete-item:hover,
+  .autocomplete-item.selected {
+    background-color: #e9ecef;
+  }
+
+  .autocomplete-item:last-child {
+    border-bottom: none;
+  }
+
+  .autocomplete-item .main-text {
+    font-weight: 500;
+    color: #212529;
+  }
+
+  .autocomplete-item .secondary-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 2px;
+  }
+
+  .autocomplete-item.text-muted {
+    font-style: italic;
+    text-align: center;
+    background-color: #f8f9fa;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .autocomplete-dropdown {
+      max-height: 200px;
+    }
+    
+    .autocomplete-item {
+      padding: 10px 12px;
+    }
+  }
+</style>
+
+<script>
+  // Global variables
+  let fleetData = {};
+  let vehiclesData = [];
+  let tripsData = [];
+
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Dashboard initializing...");
+
+    // Initialize dashboard
+    loadDashboardData();
+
+    // Initialize autocomplete dropdowns
+    initializeAutocomplete();
+
+    // Set up tab event listeners
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tab) => {
+      tab.addEventListener("shown.bs.tab", function (event) {
+        const targetTab = event.target.getAttribute("data-bs-target");
+        handleTabSwitch(targetTab);
+      });
+    });
+
+    // Set up price calculator form
+    const calculatorForm = document.getElementById("price-calculator-form");
+    if (calculatorForm) {
+      calculatorForm.addEventListener("submit", handlePriceCalculation);
+    }
+  });
+
+  async function loadDashboardData() {
+    try {
+      // Load fleet statistics
+      await loadFleetStats();
+
+      // Load vehicles data
+      await loadVehiclesData();
+
+      // Load trips data
+      await loadTripsData();
+
+      // Update overview tab
+      updateOverviewTab();
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    }
+  }
+
+  async function loadFleetStats() {
+    try {
+      const response = await fetch("/fleet/api/stats/", {
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+        },
+      });
+
+      if (response.ok) {
+        fleetData = await response.json();
+        console.log("Fleet stats loaded:", fleetData);
+        updateFleetMetrics();
+      }
+    } catch (error) {
+      console.error("Error loading fleet stats:", error);
+    }
+  }
+
+  async function loadVehiclesData() {
+    try {
+      const response = await fetch("/fleet/api/vehicles/", {
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+        },
+      });
+
+      if (response.ok) {
+        vehiclesData = await response.json();
+        console.log("Vehicles data loaded:", vehiclesData);
+      }
+    } catch (error) {
+      console.error("Error loading vehicles data:", error);
+    }
+  }
+
+  async function loadTripsData() {
+    try {
+      const response = await fetch("/fleet/api/trips/", {
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+        },
+      });
+
+      if (response.ok) {
+        tripsData = await response.json();
+        console.log("Trips data loaded:", tripsData);
+      }
+    } catch (error) {
+      console.error("Error loading trips data:", error);
+    }
+  }
+
+  function updateFleetMetrics() {
+    if (!fleetData) return;
+
+    // Update main metric cards
+    document.getElementById("total-vehicles").textContent =
+      fleetData.total_vehicles || 0;
+    document.getElementById("active-trips").textContent =
+      fleetData.active_trips || 0;
+    document.getElementById("fleet-utilization").textContent =
+      fleetData.fleet_utilization
+        ? Math.round(fleetData.fleet_utilization) + "%"
+        : "0%";
+    document.getElementById("total-revenue").textContent =
+      fleetData.total_revenue
+        ? "₹" + fleetData.total_revenue.toLocaleString()
+        : "₹0";
+  }
+
+  function updateOverviewTab() {
+    if (!fleetData) return;
+
+    // Update overview statistics
+    document.getElementById("overview-active").textContent =
+      fleetData.active_vehicles || 0;
+    document.getElementById("overview-idle").textContent =
+      fleetData.idle_vehicles || 0;
+    document.getElementById("overview-maintenance").textContent =
+      fleetData.maintenance_vehicles || 0;
+    document.getElementById("overview-active-trips").textContent =
+      fleetData.active_trips || 0;
+    document.getElementById("overview-completed-trips").textContent =
+      fleetData.completed_trips || 0;
+
+    const pendingTrips =
+      (fleetData.total_trips || 0) -
+      (fleetData.active_trips || 0) -
+      (fleetData.completed_trips || 0);
+    document.getElementById("overview-pending-trips").textContent = Math.max(
+      pendingTrips,
+      0,
+    );
+  }
+
+  function handleTabSwitch(targetTab) {
+    console.log("Switching to tab:", targetTab);
+
+    switch (targetTab) {
+      case "#fleet":
+        updateVehiclesTable();
+        break;
+      case "#trips":
+        updateTripsTable();
+        break;
+      case "#analytics":
+        updateAnalyticsTab();
+        break;
+    }
+  }
+
+  function updateVehiclesTable() {
+    const tbody = document.getElementById("vehicles-table-body");
+
+    if (!vehiclesData || vehiclesData.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="6" class="text-center text-muted py-3">No vehicles found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = vehiclesData
+      .map(
+        (vehicle) => `
+    <tr>
+      <td><strong>${vehicle.vehicle_number}</strong></td>
+      <td>${vehicle.model}</td>
+      <td>${vehicle.capacity} tons</td>
+      <td>
+        <span class="badge bg-${getStatusColor(vehicle.status)}">
+          ${vehicle.status.charAt(0).toUpperCase() + vehicle.status.slice(1)}
+        </span>
+      </td>
+      <td>
+        <div class="small">
+          <i class="fas fa-map-marker-alt"></i>
+          ${vehicle.location ? "Live Location" : "Location Unknown"}
+        </div>
+      </td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary" onclick="trackVehicle(${vehicle.id})" title="Track">
+            <i class="fas fa-map-marker-alt"></i>
+          </button>
+          <button class="btn btn-outline-info" onclick="viewVehicle(${vehicle.id})" title="View">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `,
+      )
+      .join("");
+  }
+
+  function updateTripsTable() {
+    const tbody = document.getElementById("trips-table-body");
+
+    if (!tripsData || tripsData.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="7" class="text-center text-muted py-3">No trips found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = tripsData
+      .map(
+        (trip) => `
+    <tr>
+      <td><strong>#${trip.id}</strong></td>
+      <td>
+        <div class="small">
+          <strong>From:</strong> ${trip.origin}<br>
+          <strong>To:</strong> ${trip.destination}
+        </div>
+      </td>
+      <td>${trip.distance} km</td>
+      <td>₹${parseFloat(trip.estimated_cost).toLocaleString()}</td>
+      <td>
+        <span class="badge bg-${getStatusColor(trip.status)}">
+          ${trip.status.charAt(0).toUpperCase() + trip.status.slice(1)}
+        </span>
+      </td>
+      <td>
+        ${
+          trip.driver_name && trip.driver_name !== "Unassigned"
+            ? `<div class="d-flex align-items-center">
+            <i class="fas fa-user-circle me-2"></i>
+            <span>${trip.driver_name}</span>
+          </div>`
+            : '<span class="text-muted">Not assigned</span>'
+        }
+      </td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary" onclick="trackTrip(${trip.id})" title="Track">
+            <i class="fas fa-route"></i>
+          </button>
+          <button class="btn btn-outline-info" onclick="viewTrip(${trip.id})" title="View">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `,
+      )
+      .join("");
+  }
+
+  function updateAnalyticsTab() {
+    if (!fleetData) return;
+
+    // Update fleet status chart
+    document.getElementById("chart-active").textContent =
+      fleetData.active_vehicles || 0;
+    document.getElementById("chart-idle").textContent =
+      fleetData.idle_vehicles || 0;
+    document.getElementById("chart-maintenance").textContent =
+      fleetData.maintenance_vehicles || 0;
+
+    // Update trip status chart
+    document.getElementById("chart-completed").textContent =
+      fleetData.completed_trips || 0;
+    document.getElementById("chart-active-trips").textContent =
+      fleetData.active_trips || 0;
+
+    const pendingTrips =
+      (fleetData.total_trips || 0) -
+      (fleetData.active_trips || 0) -
+      (fleetData.completed_trips || 0);
+    document.getElementById("chart-pending").textContent = Math.max(
+      pendingTrips,
+      0,
+    );
+
+    // Update progress bars based on data
+    updateProgressBars();
+  }
+
+  function updateProgressBars() {
+    if (!fleetData) return;
+
+    const totalVehicles = fleetData.total_vehicles || 1;
+    const totalTrips = fleetData.total_trips || 1;
+
+    // Fleet status progress bars
+    const activePercent = Math.round(
+      (fleetData.active_vehicles / totalVehicles) * 100,
+    );
+    const idlePercent = Math.round(
+      (fleetData.idle_vehicles / totalVehicles) * 100,
+    );
+    const maintenancePercent = Math.round(
+      (fleetData.maintenance_vehicles / totalVehicles) * 100,
+    );
+
+    document.querySelector(
+      "#fleet-status-chart .col-4:nth-child(1) .progress-bar",
+    ).style.width = activePercent + "%";
+    document.querySelector(
+      "#fleet-status-chart .col-4:nth-child(2) .progress-bar",
+    ).style.width = idlePercent + "%";
+    document.querySelector(
+      "#fleet-status-chart .col-4:nth-child(3) .progress-bar",
+    ).style.width = maintenancePercent + "%";
+
+    // Trip status progress bars
+    const completedPercent = Math.round(
+      (fleetData.completed_trips / totalTrips) * 100,
+    );
+    const activeTripsPercent = Math.round(
+      (fleetData.active_trips / totalTrips) * 100,
+    );
+    const pendingTrips =
+      totalTrips - fleetData.active_trips - fleetData.completed_trips;
+    const pendingPercent = Math.round((pendingTrips / totalTrips) * 100);
+
+    document.querySelector(
+      "#trip-status-chart .mb-3:nth-child(1) .progress-bar",
+    ).style.width = completedPercent + "%";
+    document.querySelector(
+      "#trip-status-chart .mb-3:nth-child(2) .progress-bar",
+    ).style.width = activeTripsPercent + "%";
+    document.querySelector(
+      "#trip-status-chart .mb-3:nth-child(3) .progress-bar",
+    ).style.width = pendingPercent + "%";
+  }
+
+  // Indian number formatting function (lakhs/crores system) with decimal support
+  function formatIndianNumber(num) {
+    if (num === null || num === undefined || isNaN(num)) return "0.00";
+
+    // Convert to number and format with 2 decimal places
+    const number = parseFloat(num).toFixed(2);
+    const [integerPart, decimalPart] = number.split(".");
+
+    if (integerPart.length <= 3) {
+      return number;
+    }
+
+    const lastThree = integerPart.substring(integerPart.length - 3);
+    const otherNumbers = integerPart.substring(0, integerPart.length - 3);
+
+    if (otherNumbers !== "") {
+      return (
+        otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") +
+        "," +
+        lastThree +
+        "." +
+        decimalPart
+      );
+    }
+
+    return lastThree + "." + decimalPart;
+  }
+
+async function handlePriceCalculation(event) {
+    event.preventDefault();
+
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+    const truckType = document.getElementById("truck-type").value;
+    const driverType = document.getElementById("driver-type").value;
+    const truckQuantity = parseInt(document.getElementById("truck-quantity").value);
+
+    if (!origin || !destination || !truckType || !driverType || !truckQuantity) {
+        alert("Please fill in all required fields");
+        return;
+    }
+
+    const calcSpinner = document.getElementById("calc-spinner");
+    if (calcSpinner) calcSpinner.classList.remove("d-none");
+
+    try {
+        const response = await fetch("/fleet/api/calculate-distance/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+            },
+            body: JSON.stringify({
+                origin,
+                destination,
+                truck_type: truckType,
+                driver_type: driverType,
+                truck_quantity: truckQuantity,
+            }),
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+
+            // ✅ Pass full data to updated displayPriceResult
+            displayPriceResult(data);
+        } else {
+            const errorData = await response.json();
+            alert("Error: " + (errorData.error || "Failed to calculate price"));
+        }
+    } catch (error) {
+        console.error("Error calculating price:", error);
+        alert("Error calculating price. Please try again.");
+    } finally {
+        if (calcSpinner) calcSpinner.classList.add("d-none");
+    }
+}
+
+
+function displayPriceResult(data) {
+  const truckQuantity = data.truck_quantity || 1;
+  const single = data.single;
+  const multi = data.multi;
+
+  const serviceChargeRateSingle = Math.round((single.service_charge_rate || 0) * 100);
+  const serviceChargeRateMulti = Math.round((multi.service_charge_rate || 0) * 100);
+
+  // Distance
+  document.getElementById("calc-distance").textContent = `${data.distance} km`;
+
+  // Fuel
+  document.getElementById("fuel-rate").textContent = (single.fuel_cost_per_km || 0).toFixed(2);
+  document.getElementById("calc-fuel-single").textContent = formatIndianNumber(single.total_fuel_cost || 0);
+  // removed multi fuel
+
+  // Driver
+  document.getElementById("driver-rate").textContent = (single.driver_cost_per_km || 0).toFixed(2);
+  document.getElementById("calc-driver-single").textContent = formatIndianNumber(single.total_driver_cost || 0);
+  // removed multi driver
+
+  // Enroute
+  document.getElementById("enroute-rate").textContent = (single.enroute_cost_per_km || 0).toFixed(2);
+  document.getElementById("calc-maintenance-single").textContent = formatIndianNumber(single.total_enroute_cost || 0);
+  // removed multi enroute
+
+  // Base Cost
+  document.getElementById("calc-base-cost-single").textContent = formatIndianNumber(single.base_cost || 0);
+  // removed multi base cost
+
+  // Service Charge
+  document.getElementById("service-rate").textContent = serviceChargeRateMulti;
+  document.getElementById("calc-service-single").textContent = formatIndianNumber(single.service_charge || 0);
+  // removed multi service charge
+
+  // Per KM rate
+  document.getElementById("calc-gst").textContent = (single.per_km_rate || 0).toFixed(2);
+
+  // Total Cost (always show single)
+  document.getElementById("calc-total").textContent = formatIndianNumber(single.total_cost || 0);
+
+  // Bulk Cost logic (show only if trucks > 1)
+  const bulkTotalRow = document.getElementById("bulk-total-row");
+  const multiTotalCost = truckQuantity > 1 ? multi.total_cost : single.total_cost;
+  document.getElementById("calc-total-multi").textContent = formatIndianNumber(multi.total_cost || 0);
+  if (truckQuantity > 1) {
+    bulkTotalRow.style.display = "flex";
+  } else {
+    bulkTotalRow.style.display = "none";
+  }
+
+  // Final toggle visibility
+  document.getElementById("price-placeholder").style.display = "none";
+  document.getElementById("price-result").style.display = "block";
+
+  window.currentCalculation = data;
+  addToRecentCalculations(data);
+}
+
+
+
+function addToRecentCalculations(data) {
+    const tableBody = document.getElementById("recent-calculations");
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+    const truckType = document.getElementById("truck-type").value;
+
+    if (tableBody.querySelector('td[colspan="6"]')) {
+        tableBody.innerHTML = "";
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td><div class="fw-semibold">${origin} → ${destination}</div></td>
+        <td><span class="badge bg-primary">${data.distance} km</span></td>
+        <td><span class="badge bg-secondary">${truckType}</span></td>
+        <td><span class="fw-bold text-success">₹${formatIndianNumber(data.multi.total_cost)}</span></td>
+        <td><small class="text-muted">${new Date().toLocaleTimeString()}</small></td>
+        <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="recreateCalculation(this)">
+                <i class="fas fa-redo"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-success" onclick="createTripFromRow(this)">
+                <i class="fas fa-plus"></i>
+            </button>
+        </td>
+    `;
+    tableBody.insertBefore(row, tableBody.firstChild);
+    while (tableBody.children.length > 5) {
+        tableBody.removeChild(tableBody.lastChild);
+    }
+}
+
+
+  function clearCalculator() {
+    document.getElementById("price-calculator-form").reset();
+    document.getElementById("price-result").style.display = "none";
+    document.getElementById("price-placeholder").style.display = "block";
+    document.getElementById("route-info-card").style.display = "none";
+    window.currentCalculation = null;
+  }
+
+  function shareQuotation() {
+    if (!window.currentCalculation) {
+      alert("Please calculate price first");
+      return;
+    }
+
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+    const truckType = document.getElementById("truck-type").value;
+    const total = window.currentCalculation.total_cost;
+
+    const shareText = `Trip Quote: ${origin} to ${destination}\nVehicle: ${truckType}\nDistance: ${window.currentCalculation.distance} km\nTotal Cost: ₹${formatIndianNumber(total)}\n\nBook with DriveNowKM Flex`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: "Trip Quotation - DriveNowKM",
+        text: shareText,
+      });
+    } else {
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert("Quotation copied to clipboard!");
+      });
+    }
+  }
+
+  function loadSavedRoutes() {
+    alert("Saved routes feature coming soon!");
+  }
+
+  function compareRates() {
+    alert("Rate comparison feature coming soon!");
+  }
+
+  function bulkCalculation() {
+    alert("Bulk calculation feature coming soon!");
+  }
+
+  function recreateCalculation(button) {
+    const row = button.closest("tr");
+    const routeText = row.cells[0].textContent.trim();
+    const [origin, destination] = routeText.split(" → ");
+
+    document.getElementById("origin").value = origin;
+    document.getElementById("destination").value = destination;
+
+    // Trigger calculation
+    document
+      .getElementById("price-calculator-form")
+      .dispatchEvent(new Event("submit"));
+  }
+
+  function createTripFromRow(button) {
+    recreateCalculation(button);
+    setTimeout(() => {
+      if (window.currentCalculation) {
+        createTripFromCalculator();
+      }
+    }, 1000);
+  }
+
+  async function proceedToPayment() {
+    if (!window.currentCalculation) {
+      alert("Please calculate trip price first");
+      return;
+    }
+
+    try {
+      // Show loading state
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.innerHTML =
+        '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+      button.disabled = true;
+
+      // Prepare trip data
+      const tripData = {
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        truck_type: document.getElementById("truck-type").value,
+        driver_type: document.getElementById("driver-type").value,
+        truck_quantity:
+          parseInt(document.getElementById("truck-quantity").value) || 1,
+        distance: window.currentCalculation.distance,
+        estimated_cost: window.currentCalculation.total_cost,
+        calculation_details: window.currentCalculation,
+      };
+
+      // Create trip in database
+      const response = await fetch("/fleet/create-trip-and-payment/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCsrfToken(),
+        },
+        body: JSON.stringify(tripData),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Trip created successfully, redirect to Razorpay
+          window.location.href = "https://rzp.io/rzp/SZvJB6N7";
+        } else {
+          alert("Error creating trip: " + (result.error || "Unknown error"));
+          button.innerHTML = originalText;
+          button.disabled = false;
+        }
+      } else {
+        const errorData = await response.json();
+        alert("Error: " + (errorData.error || "Failed to create trip"));
+        button.innerHTML = originalText;
+        button.disabled = false;
+      }
+    } catch (error) {
+      console.error("Error processing payment:", error);
+      alert("Error processing payment. Please try again.");
+      const button = event.target;
+      button.innerHTML =
+        '<i class="fas fa-credit-card me-2"></i>Proceed to Payment';
+      button.disabled = false;
+    }
+  }
+
+  function getCsrfToken() {
+    return (
+      document.querySelector("[name=csrfmiddlewaretoken]").value ||
+      document
+        .querySelector('meta[name="csrf-token"]')
+        .getAttribute("content") ||
+      ""
+    );
+  }
+
+  function getStatusColor(status) {
+    const colorMap = {
+      active: "success",
+      idle: "warning",
+      maintenance: "danger",
+      pending: "warning",
+      in_progress: "info",
+      completed: "success",
+      cancelled: "danger",
+    };
+    return colorMap[status] || "secondary";
+  }
+
+  // Utility functions
+  function refreshFleetData() {
+    loadVehiclesData().then(() => updateVehiclesTable());
+  }
+
+  function refreshTripsData() {
+    loadTripsData().then(() => updateTripsTable());
+  }
+
+  function trackVehicle(vehicleId) {
+    console.log("Tracking vehicle:", vehicleId);
+    // Implementation for vehicle tracking
+  }
+
+  function viewVehicle(vehicleId) {
+    console.log("Viewing vehicle:", vehicleId);
+    // Implementation for viewing vehicle details
+  }
+
+  function trackTrip(tripId) {
+    console.log("Tracking trip:", tripId);
+    // Implementation for trip tracking
+  }
+
+  function viewTrip(tripId) {
+    console.log("Viewing trip:", tripId);
+    // Implementation for viewing trip details
+  }
+
+  async function createTripFromCalculator() {
+    if (!window.currentCalculation) {
+      alert("Please calculate price first");
+      return;
+    }
+
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+    const truckType = document.getElementById("truck-type").value;
+
+    try {
+      const response = await fetch("/fleet/api/create-trip/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+        },
+        body: JSON.stringify({
+          origin: origin,
+          destination: destination,
+          truck_type: truckType,
+          distance: window.currentCalculation.distance,
+          estimated_cost: window.currentCalculation.total_cost,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert("Trip created successfully! Trip ID: " + result.trip_id);
+
+        // Reset form
+        document.getElementById("price-calculator-form").reset();
+        document.getElementById("price-result").style.display = "none";
+        document.getElementById("price-placeholder").style.display = "block";
+
+        // Refresh trip data
+        loadTripsData();
+      } else {
+        alert("Error creating trip. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating trip:", error);
+      alert("Error creating trip. Please try again.");
+    }
+  }
+
+  async function proceedToPayment() {
+    if (!window.currentCalculation) {
+      alert("Please calculate price first");
+      return;
+    }
+
+    const totalCost = window.currentCalculation.total_cost;
+    const origin = document.getElementById("origin").value;
+    const destination = document.getElementById("destination").value;
+    const truckType = document.getElementById("truck-type").value;
+    const driverType = document.getElementById("driver-type").value;
+    const truckQuantity = window.currentCalculation.truck_quantity;
+
+    // Create payment confirmation dialog
+    const confirmPayment = confirm(
+      `Proceed to payment for trip from ${origin} to ${destination}?\n\n` +
+        `${truckQuantity} x ${truckType.replace(/_/g, " ").toUpperCase()}\n` +
+        `Driver: ${driverType.charAt(0).toUpperCase() + driverType.slice(1)}\n` +
+        `Distance: ${window.currentCalculation.distance} km\n` +
+        `Total Amount: ₹${totalCost.toLocaleString()}\n\n` +
+        `Click OK to create trip and proceed to payment.`,
+    );
+
+    if (confirmPayment) {
+      try {
+        // First create the trip
+        const response = await fetch("/fleet/api/create-trip/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+              .value,
+          },
+          body: JSON.stringify({
+            origin: origin,
+            destination: destination,
+            truck_type: truckType,
+            driver_type: driverType,
+            truck_quantity: truckQuantity,
+            distance: window.currentCalculation.distance,
+            estimated_cost: totalCost,
+            pricing_details: window.currentCalculation,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+
+          // Show success message and redirect to Razorpay
+          alert(
+            `Trip created successfully! Trip ID: ${result.trip_id}\n\nRedirecting to payment gateway...`,
+          );
+
+          // Redirect to Razorpay payment link
+          window.open(
+            "https://razorpay.com/payment-link/plink_QaLdfgw7ty3tdn",
+            "_blank",
+          );
+
+          // Reset form after successful creation
+          document.getElementById("price-calculator-form").reset();
+          document.getElementById("price-result").style.display = "none";
+          document.getElementById("price-placeholder").style.display = "block";
+          document.getElementById("route-info-card").style.display = "none";
+
+          // Refresh trip data
+          if (typeof loadTripsData === "function") {
+            loadTripsData();
+          }
+        } else {
+          const errorData = await response.json();
+          alert(
+            "Error creating trip: " + (errorData.error || "Please try again"),
+          );
+        }
+      } catch (error) {
+        console.error("Error creating trip:", error);
+        alert("Error creating trip. Please try again.");
+      }
+    }
+  }
+
+  function updateServiceChargeRate() {
+    const truckQuantity = parseInt(
+      document.getElementById("truck-quantity").value,
+    );
+    const serviceRateInfo = document.getElementById("service-rate-info");
+
+    if (truckQuantity) {
+      let rate, description;
+
+      if (truckQuantity >= 1 && truckQuantity <= 4) {
+        rate = "20%";
+        description = "20% service charge (1-4 trucks)";
+      } else if (truckQuantity >= 5 && truckQuantity <= 9) {
+        rate = "18%";
+        description = "18% service charge (5-9 trucks)";
+      } else if (truckQuantity >= 10 && truckQuantity <= 20) {
+        rate = "15%";
+        description = "15% service charge (10-20 trucks)";
+      } else {
+        rate = "13%";
+        description = "13% service charge (20+ trucks)";
+      }
+
+      serviceRateInfo.innerHTML = `<i class="fas fa-percent me-1"></i>${description}`;
+      serviceRateInfo.className = "form-text text-success";
+    } else {
+      serviceRateInfo.innerHTML =
+        '<i class="fas fa-percent me-1"></i>Service charge varies by quantity';
+      serviceRateInfo.className = "form-text";
+    }
+  }
+
+  // Simplified autocomplete dropdown system with single input
+  class AutocompleteDropdown {
+  constructor(inputId, dropdownId, listId) {
+    this.input = document.getElementById(inputId);
+    this.dropdown = document.getElementById(dropdownId);
+    this.list = document.getElementById(listId);
+    this.cities = [];
+    this.filteredCities = [];
+    this.debounceTimeout = null;
+    this.isSelecting = false;
+    this.init();
+  }
+
+  init() {
+    this.loadCities();
+
+    this.input.addEventListener("input", (e) => this.handleInputChange(e));
+    this.input.addEventListener("focus", () => {
+      if (this.input.value.length >= 3) this.showDropdown();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!this.input.closest(".autocomplete-container").contains(e.target)) {
+        this.hideDropdown();
+      }
+    });
+  }
+
+  async loadCities() {
+    try {
+      const response = await fetch("/fleet/api/all-cities/");
+      const data = await response.json();
+      this.cities = data.results || [];
+    } catch (err) {
+      console.error("Error loading cities", err);
+    }
+  }
+
+  handleInputChange(e) {
+    if (this.isSelecting) return;
+
+    const query = e.target.value.trim();
+    if (query.length >= 3) {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(async () => {
+        await this.fetchFilteredCities(query);
+        this.renderList();
+        this.showDropdown();
+      }, 200);
+    } else {
+      this.hideDropdown();
+    }
+  }
+
+  async fetchFilteredCities(query) {
+    try {
+      const res = await fetch(`/fleet/api/city-autocomplete/?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      this.filteredCities = data.results || [];
+    } catch (err) {
+      console.error("Error filtering cities", err);
+      this.filteredCities = [];
+    }
+  }
+
+  renderList() {
+    if (this.filteredCities.length === 0) {
+      this.list.innerHTML = `<div class="autocomplete-item text-muted">No cities found</div>`;
+      return;
+    }
+    this.list.innerHTML = this.filteredCities.slice(0, 50).map(city => `
+      <div class="autocomplete-item" data-city="${city.text}" data-latitude="${city.latitude}" data-longitude="${city.longitude}">
+        <div class="main-text">${city.city}</div>
+        <div class="secondary-text">${city.state}</div>
+      </div>
+    `).join("");
+
+    this.list.querySelectorAll(".autocomplete-item").forEach(item => {
+      item.addEventListener("click", () => this.selectCity(item));
+    });
+  }
+
+  selectCity(item) {
+    this.isSelecting = true;
+    this.input.value = item.dataset.city;
+    this.input.dataset.latitude = item.dataset.latitude;
+    this.input.dataset.longitude = item.dataset.longitude;
+    this.isSelecting = false;
+    this.hideDropdown();
+    this.input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  showDropdown() {
+    this.dropdown.classList.add("show");
+  }
+
+  hideDropdown() {
+    this.dropdown.classList.remove("show");
+  }
+}
+
+
+  // Initialize autocomplete dropdowns
+  function initializeAutocomplete() {
+    window.originAutocomplete = new AutocompleteDropdown(
+      "origin",
+      "origin-dropdown",
+      "origin-list",
+    );
+    window.destinationAutocomplete = new AutocompleteDropdown(
+      "destination",
+      "destination-dropdown",
+      "destination-list",
+    );
+  }
+
+  // Recent calculations management with localStorage persistence
+  class RecentCalculations {
+    constructor() {
+      this.storageKey = "drivenowkm_recent_calculations";
+      this.maxItems = 10;
+    }
+
+    save(calculation) {
+      const calculations = this.getAll();
+
+      // Add timestamp and create unique identifier
+      const calcWithTimestamp = {
+        ...calculation,
+        timestamp: new Date().toISOString(),
+        id: Date.now() + Math.random().toString(36).substr(2, 9),
+      };
+
+      // Remove duplicates based on route and truck type
+      const filtered = calculations.filter(
+        (calc) =>
+          !(
+            calc.origin === calculation.origin &&
+            calc.destination === calculation.destination &&
+            calc.truck_type === calculation.truck_type
+          ),
+      );
+
+      // Add new calculation at the beginning
+      filtered.unshift(calcWithTimestamp);
+
+      // Keep only the most recent items
+      const limited = filtered.slice(0, this.maxItems);
+
+      localStorage.setItem(this.storageKey, JSON.stringify(limited));
+      this.updateDisplay();
+    }
+
+    getAll() {
+      try {
+        const stored = localStorage.getItem(this.storageKey);
+        return stored ? JSON.parse(stored) : [];
+      } catch (error) {
+        console.error("Error loading recent calculations:", error);
+        return [];
+      }
+    }
+
+    updateDisplay() {
+      const tbody = document.getElementById("recent-calculations");
+      const calculations = this.getAll();
+
+      if (calculations.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center text-muted py-4">
+            <i class="fas fa-calculator fa-2x mb-2 d-block"></i>
+            No recent calculations
+          </td>
+        </tr>
+      `;
+        return;
+      }
+
+      tbody.innerHTML = calculations
+        .map((calc) => {
+          const date = new Date(calc.timestamp).toLocaleDateString();
+          const time = new Date(calc.timestamp).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          return `
+        <tr>
+          <td>
+            <div class="fw-semibold">${calc.origin}</div>
+            <small class="text-muted">to ${calc.destination}</small>
+          </td>
+          <td>${calc.distance} km</td>
+          <td>
+            <span class="badge bg-primary">${calc.truck_type.replace(/_/g, " ")}</span>
+            <small class="d-block text-muted">${calc.truck_quantity} truck(s)</small>
+          </td>
+          <td class="fw-semibold text-success">₹${calc.total_cost.toLocaleString()}</td>
+          <td>
+            <small>${date}<br>${time}</small>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary" onclick="loadCalculation('${calc.id}')">
+              <i class="fas fa-redo me-1"></i>Reload
+            </button>
+          </td>
+        </tr>
+      `;
+        })
+        .join("");
+    }
+
+    getById(id) {
+      const calculations = this.getAll();
+      return calculations.find((calc) => calc.id === id);
+    }
+  }
+
+  // Initialize autocomplete and recent calculations
+  let originAutocomplete, destinationAutocomplete, recentCalcs;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("Dashboard initializing...");
+
+    // Initialize dashboard
+    loadDashboardData();
+
+    // Initialize autocomplete dropdowns - THIS IS THE CORRECT ONE
+    initializeAutocomplete();
+
+    // Initialize recent calculations
+    recentCalcs = new RecentCalculations();
+    recentCalcs.updateDisplay();
+
+    // Set up tab event listeners
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach((tab) => {
+      tab.addEventListener("shown.bs.tab", function (event) {
+        const targetTab = event.target.getAttribute("data-bs-target");
+        handleTabSwitch(targetTab);
+      });
+    });
+
+    // Set up price calculator form
+    const calculatorForm = document.getElementById("price-calculator-form");
+    if (calculatorForm) {
+      calculatorForm.addEventListener("submit", handlePriceCalculation);
+    }
+});
+
+
+  // Load a previous calculation
+  function loadCalculation(calculationId) {
+    const calculation = recentCalcs.getById(calculationId);
+    if (!calculation) {
+      alert("Calculation not found");
+      return;
+    }
+
+    // Populate form fields
+    document.getElementById("origin").value = calculation.origin;
+    document.getElementById("destination").value = calculation.destination;
+    document.getElementById("truck-type").value = calculation.truck_type;
+    document.getElementById("driver-type").value = calculation.driver_type;
+    document.getElementById("truck-quantity").value =
+      calculation.truck_quantity;
+
+    // Store current calculation
+    window.currentCalculation = calculation;
+
+    // Update price display
+    displayPriceResult(calculation);
+    // Switch to calculator tab
+    const calculatorTab = document.querySelector('a[href="#calculator"]');
+    if (calculatorTab) {
+      const tabInstance = new bootstrap.Tab(calculatorTab);
+      tabInstance.show();
+    }
+
+    alert("Calculation loaded successfully!");
+  }
+
+  // Update the existing calculatePrice function to save recent calculations
+  const originalCalculatePrice = window.calculatePrice;
+  window.calculatePrice = async function () {
+    const result = await originalCalculatePrice();
+
+    // Save to recent calculations if successful
+    if (
+      window.currentCalculation &&
+      window.currentCalculation.success !== false
+    ) {
+      const calculationData = {
+        origin: document.getElementById("origin").value,
+        destination: document.getElementById("destination").value,
+        truck_type: document.getElementById("truck-type").value,
+        driver_type: document.getElementById("driver-type").value,
+        truck_quantity: parseInt(
+          document.getElementById("truck-quantity").value,
+        ),
+        ...window.currentCalculation,
+      };
+
+      recentCalcs.save(calculationData);
+    }
+
+    return result;
+  };
+</script>
+
+{% endblock %}
